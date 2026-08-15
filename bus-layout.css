@@ -1,89 +1,26 @@
 /* JANBAHON BUS RESULTS + SEAT MODAL OVERRIDES */
 
-.bus-results {
-  width: min(calc(100% - 44px), 1490px) !important;
-  padding-top: 55px !important;
-  padding-bottom: 90px !important;
-}
-
-#bus-results-list,
-.bus-results-list {
-  width: 100% !important;
-  max-width: 1490px !important;
-  margin: 0 auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 14px !important;
-}
-
-.bus-card {
-  width: 100% !important;
-  min-height: 176px !important;
-  padding: 28px 30px !important;
-  display: grid !important;
-  grid-template-columns: 180px minmax(260px,1.25fr) minmax(390px,2fr) 145px !important;
-  align-items: center !important;
-  gap: 30px !important;
-  background: #fff !important;
-  border: 1px solid #e7ebf0 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 7px 22px rgba(8,43,92,.055) !important;
-  transition: transform .2s ease,box-shadow .2s ease,border-color .2s ease !important;
-}
-
-.bus-card:hover {
-  transform: translateY(-2px) !important;
-  border-color: rgba(244,123,32,.25) !important;
-  box-shadow: 0 12px 28px rgba(8,43,92,.09) !important;
-}
-
-.bus-operator-block {
-  min-width: 0 !important;
-  min-height: 118px !important;
-  padding-right: 28px !important;
-  border-right: 2px solid #eef1f5 !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-.bus-operator {
-  color: #082b5c !important;
-  font-size: 20px !important;
-  font-weight: 800 !important;
-  line-height: 1.25 !important;
-}
-
-.bus-info { min-width: 0 !important; }
-.bus-info h3 { margin: 0 0 12px !important; color:#082b5c !important; font-size:24px !important; line-height:1.15 !important; }
+.bus-results { width: min(calc(100% - 44px), 1490px) !important; padding-top: 55px !important; padding-bottom: 90px !important; }
+#bus-results-list,.bus-results-list { width:100% !important; max-width:1490px !important; margin:0 auto !important; display:flex !important; flex-direction:column !important; gap:14px !important; }
+.bus-card { width:100% !important; min-height:176px !important; padding:28px 30px !important; display:grid !important; grid-template-columns:180px minmax(260px,1.25fr) minmax(390px,2fr) 145px !important; align-items:center !important; gap:30px !important; background:#fff !important; border:1px solid #e7ebf0 !important; border-radius:12px !important; box-shadow:0 7px 22px rgba(8,43,92,.055) !important; transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease !important; }
+.bus-card:hover { transform:translateY(-2px) !important; border-color:rgba(244,123,32,.25) !important; box-shadow:0 12px 28px rgba(8,43,92,.09) !important; }
+.bus-operator-block { min-width:0 !important; min-height:118px !important; padding-right:28px !important; border-right:2px solid #eef1f5 !important; display:flex !important; align-items:center !important; }
+.bus-operator { color:#082b5c !important; font-size:20px !important; font-weight:800 !important; line-height:1.25 !important; }
+.bus-info { min-width:0 !important; }
+.bus-info h3 { margin:0 0 12px !important; color:#082b5c !important; font-size:24px !important; line-height:1.15 !important; }
 .bus-type { margin:0 !important; color:#718096 !important; font-size:17px !important; }
 .bus-price { margin:14px 0 0 !important; color:#082b5c !important; font-size:22px !important; font-weight:800 !important; }
 .bus-price span { font-size:15px !important; font-weight:500 !important; }
-
-.bus-journey-line {
-  min-width:0 !important;
-  display:grid !important;
-  grid-template-columns:120px minmax(130px,1fr) 120px !important;
-  align-items:center !important;
-  gap:14px !important;
-}
-
+.bus-journey-line { min-width:0 !important; display:grid !important; grid-template-columns:120px minmax(130px,1fr) 120px !important; align-items:center !important; gap:14px !important; }
 .journey-point { display:flex !important; flex-direction:column !important; gap:6px !important; }
 .journey-point strong { color:#111 !important; font-size:18px !important; white-space:nowrap !important; }
 .journey-point span { color:#111 !important; font-size:18px !important; font-weight:800 !important; white-space:nowrap !important; }
 .journey-arrival { text-align:left !important; }
-
-.journey-track {
-  position:relative !important;
-  height:64px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-}
+.journey-track { position:relative !important; height:64px !important; display:flex !important; align-items:center !important; justify-content:center !important; }
 .track-dot { width:6px !important; height:6px !important; border-radius:50% !important; background:#aab5c5 !important; flex:0 0 auto !important; }
 .track-line { height:2px !important; flex:1 !important; border-top:2px dashed #aab5c5 !important; }
 .bus-icon { position:absolute !important; top:5px !important; left:50% !important; transform:translateX(-50%) !important; color:#082b5c !important; font-size:27px !important; line-height:1 !important; }
 .journey-track small { position:absolute !important; bottom:0 !important; left:50% !important; transform:translateX(-50%) !important; color:#718096 !important; font-size:16px !important; white-space:nowrap !important; }
-
 .bus-action { display:flex !important; flex-direction:column !important; align-items:center !important; justify-content:center !important; gap:18px !important; }
 .bus-seats { color:#111 !important; font-size:18px !important; font-weight:500 !important; white-space:nowrap !important; }
 .book-seat { min-width:146px !important; min-height:48px !important; padding:0 22px !important; border:0 !important; border-radius:9px !important; background:#f47b20 !important; color:#fff !important; font-weight:800 !important; font-size:17px !important; }
@@ -94,7 +31,10 @@
 .empty-results p { margin:0 !important; color:#718096 !important; }
 .empty-results-icon { margin-bottom:8px !important; color:#f47b20 !important; font-size:34px !important; }
 
-/* Seat selection modal — 2 + 1 layout */
+/* =========================================================
+   SEAT MODAL — MULTI-SEAT SELECTION / 2+1 LAYOUT
+   Single seat on LEFT. Two attached seats on RIGHT.
+   ========================================================= */
 #seat-modal { position:fixed !important; inset:0 !important; z-index:99999 !important; display:none !important; }
 #seat-modal.open { display:block !important; }
 #seat-modal .seat-overlay { position:absolute !important; inset:0 !important; display:flex !important; align-items:center !important; justify-content:center !important; padding:20px !important; background:rgba(10,29,51,.68) !important; overflow:auto !important; }
@@ -108,16 +48,18 @@
 #seat-modal .seat-legend span { display:flex !important; align-items:center !important; gap:7px !important; }
 #seat-modal .legend { display:inline-block !important; width:16px !important; height:16px !important; border-radius:4px !important; border:1px solid #ccd5df !important; }
 #seat-modal .legend.available { background:#fff !important; }
-#seat-modal .legend.selected { background:#f47b20 !important; border-color:#f47b20 !important; }
+#seat-modal .legend.selected { background:#16824b !important; border-color:#16824b !important; }
 #seat-modal .legend.booked { background:#d7dde5 !important; border-color:#d7dde5 !important; }
 #seat-modal .bus-layout { width:min(420px,100%) !important; margin:0 auto !important; padding:18px 18px 24px !important; border:2px solid #dce4ed !important; border-radius:28px !important; background:#f8fafc !important; }
 #seat-modal .driver { width:90px !important; margin:0 0 20px auto !important; padding:9px !important; text-align:center !important; background:#e7edf4 !important; border-radius:9px !important; color:#66788d !important; font-size:10px !important; font-weight:800 !important; letter-spacing:1px !important; }
-#modal-seat-grid { display:grid !important; grid-template-columns:repeat(3,minmax(48px,1fr)) !important; gap:10px !important; }
-#modal-seat-grid .seat { height:48px !important; padding:0 !important; border:2px solid #d2dbe5 !important; border-radius:10px !important; background:#fff !important; color:#082b5c !important; font-size:14px !important; font-weight:800 !important; cursor:pointer !important; transition:.15s ease !important; }
-#modal-seat-grid .seat.right-seat { grid-column:3 !important; }
-#modal-seat-grid .seat.left-seat + .seat.left-seat { grid-column:2 !important; }
-#modal-seat-grid .seat:hover:not(:disabled) { transform:translateY(-2px) !important; border-color:#f47b20 !important; background:#fff8f1 !important; }
-#modal-seat-grid .seat.selected { background:#f47b20 !important; border-color:#f47b20 !important; color:#fff !important; }
+
+/* One seat on the left + two seats attached on the right. */
+#modal-seat-grid { display:grid !important; grid-template-columns:minmax(48px,0.85fr) minmax(48px,1fr) minmax(48px,1fr) !important; column-gap:7px !important; row-gap:10px !important; }
+#modal-seat-grid .seat { height:48px !important; padding:0 !important; border:2px solid #d2dbe5 !important; border-radius:10px !important; background:#fff !important; color:#082b5c !important; font-size:14px !important; font-weight:800 !important; cursor:pointer !important; transition:transform .15s ease,border-color .15s ease,background .15s ease !important; }
+#modal-seat-grid .seat.single-left-seat { grid-column:1 !important; }
+#modal-seat-grid .seat.right-pair-seat { grid-column:auto !important; }
+#modal-seat-grid .seat:hover:not(:disabled) { transform:translateY(-2px) !important; border-color:#16824b !important; background:#f1fbf5 !important; }
+#modal-seat-grid .seat.selected { background:#16824b !important; border-color:#16824b !important; color:#fff !important; box-shadow:0 0 0 2px rgba(22,130,75,.12) !important; }
 #modal-seat-grid .seat.booked { background:#d8dee6 !important; border-color:#d8dee6 !important; color:#8793a1 !important; cursor:not-allowed !important; text-decoration:line-through !important; }
 #seat-modal .booking-summary { display:flex !important; justify-content:space-between !important; align-items:center !important; gap:20px !important; margin-top:20px !important; padding:17px 18px !important; border-radius:14px !important; background:#f4f7fa !important; }
 #seat-modal .booking-summary div { display:flex !important; flex-direction:column !important; gap:4px !important; }
