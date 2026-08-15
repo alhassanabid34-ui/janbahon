@@ -3,109 +3,286 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>JANBAHON — Bus Booking</title>
-  <meta name="description" content="JANBAHON — simple, fast and reliable bus booking across Assam and Northeast India.">
+
+  <meta
+    name="description"
+    content="JANBAHON — simple, fast and reliable bus booking across Assam and Northeast India."
+  >
+
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
+
+  <!-- HEADER -->
   <header class="site-header">
-    <a class="brand" href="/" aria-label="JANBAHON home">
+
+    <a class="brand" href="#booking" aria-label="JANBAHON home">
+
       <span class="brand-mark">▣</span>
+
       <span>
         <strong>JAN<span>BAHON</span></strong>
         <small>Your Journey. Your Seat.</small>
       </span>
+
     </a>
+
     <nav>
       <a href="#booking">Bus Booking</a>
       <a href="#routes">Popular Routes</a>
-      <a href="#track">Track Booking</a>
+      <a href="#bus-results">Available Buses</a>
       <a href="#help">Help</a>
       <a href="#login">Login</a>
       <a class="signup" href="#signup">Sign Up</a>
     </nav>
+
   </header>
 
-  <main>
-    <section class="hero" id="booking">
-      <div class="hero-inner">
-        <p class="eyebrow">ASSAM &amp; NORTHEAST INDIA</p>
-        <h1>Book Your Bus</h1>
-        <p class="subtitle">Simple. Fast. Reliable.</p>
 
+  <main>
+
+    <!-- HERO / SEARCH -->
+    <section class="hero" id="booking">
+
+      <div class="hero-inner">
+
+        <p class="eyebrow">ASSAM &amp; NORTHEAST INDIA</p>
+
+        <h1>Book Your Bus</h1>
+
+        <p class="subtitle">
+          Simple. Fast. Reliable.
+        </p>
+
+
+        <!-- SEARCH FORM -->
         <form class="search-card" id="searchForm">
+
+          <!-- FROM -->
           <label>
             <span>FROM</span>
+
             <select id="from" required>
               <option value="">Select origin</option>
-              <option>Mankachar</option>
-              <option>Hatsingimari</option>
-              <option>Dhubri</option>
-              <option>Guwahati</option>
+              <option value="Mankachar">Mankachar</option>
+              <option value="Hatsingimari">Hatsingimari</option>
+              <option value="Dhubri">Dhubri</option>
+              <option value="Guwahati">Guwahati</option>
             </select>
+
           </label>
 
-          <button class="swap" type="button" id="swap" aria-label="Swap origin and destination">⇄</button>
 
+          <!-- SWAP -->
+          <button
+            class="swap"
+            type="button"
+            id="swap"
+            aria-label="Swap origin and destination"
+          >
+            ⇄
+          </button>
+
+
+          <!-- TO -->
           <label>
             <span>TO</span>
+
             <select id="to" required>
               <option value="">Select destination</option>
-              <option>Mankachar</option>
-              <option>Hatsingimari</option>
-              <option>Dhubri</option>
-              <option>Guwahati</option>
+              <option value="Mankachar">Mankachar</option>
+              <option value="Hatsingimari">Hatsingimari</option>
+              <option value="Dhubri">Dhubri</option>
+              <option value="Guwahati">Guwahati</option>
             </select>
+
           </label>
 
+
+          <!-- DATE -->
           <label>
             <span>JOURNEY DATE</span>
-            <input id="date" type="date" required>
+
+            <input
+              id="date"
+              type="date"
+              required
+            >
+
           </label>
 
-          <button class="search-btn" type="submit">Search Buses</button>
+
+          <!-- SEARCH BUTTON -->
+          <button
+            class="search-btn"
+            type="submit"
+          >
+            Search Buses
+          </button>
+
         </form>
-        <p class="demo-note">Search is currently a demonstration. Real bus inventory will be connected next.</p>
+
+
+        <p class="demo-note">
+          Select your journey details and search for available buses.
+        </p>
+
       </div>
+
     </section>
 
+
+    <!-- POPULAR ROUTES -->
     <section class="routes" id="routes">
+
       <div class="section-heading">
+
         <p class="eyebrow">ROUTES</p>
+
         <h2>Popular Routes</h2>
-        <p>Frequently travelled connections across the region.</p>
+
+        <p>
+          Frequently travelled connections across the region.
+        </p>
+
       </div>
+
 
       <div class="route-grid">
-        <button class="route-card" data-from="Mankachar" data-to="Guwahati"><b>Mankachar</b><span>→</span><b>Guwahati</b></button>
-        <button class="route-card" data-from="Guwahati" data-to="Mankachar"><b>Guwahati</b><span>→</span><b>Mankachar</b></button>
-        <button class="route-card" data-from="Hatsingimari" data-to="Guwahati"><b>Hatsingimari</b><span>→</span><b>Guwahati</b></button>
-        <button class="route-card" data-from="Guwahati" data-to="Hatsingimari"><b>Guwahati</b><span>→</span><b>Hatsingimari</b></button>
-        <button class="route-card" data-from="Dhubri" data-to="Guwahati"><b>Dhubri</b><span>→</span><b>Guwahati</b></button>
-        <button class="route-card" data-from="Guwahati" data-to="Dhubri"><b>Guwahati</b><span>→</span><b>Dhubri</b></button>
-      </div>
-    </section>
-     <section class="bus-results" id="bus-results">
-      <div class="section-heading">
-        <p class="eyebrow">AVAILABLE BUSES</p>
-        <h2>Choose Your Bus</h2>
-        <p id="results-summary">Search for buses to see available services.</p>
+
+        <button
+          class="route-card"
+          data-from="Mankachar"
+          data-to="Guwahati"
+        >
+          <b>Mankachar</b>
+          <span>→</span>
+          <b>Guwahati</b>
+        </button>
+
+
+        <button
+          class="route-card"
+          data-from="Guwahati"
+          data-to="Mankachar"
+        >
+          <b>Guwahati</b>
+          <span>→</span>
+          <b>Mankachar</b>
+        </button>
+
+
+        <button
+          class="route-card"
+          data-from="Hatsingimari"
+          data-to="Guwahati"
+        >
+          <b>Hatsingimari</b>
+          <span>→</span>
+          <b>Guwahati</b>
+        </button>
+
+
+        <button
+          class="route-card"
+          data-from="Guwahati"
+          data-to="Hatsingimari"
+        >
+          <b>Guwahati</b>
+          <span>→</span>
+          <b>Hatsingimari</b>
+        </button>
+
+
+        <button
+          class="route-card"
+          data-from="Dhubri"
+          data-to="Guwahati"
+        >
+          <b>Dhubri</b>
+          <span>→</span>
+          <b>Guwahati</b>
+        </button>
+
+
+        <button
+          class="route-card"
+          data-from="Guwahati"
+          data-to="Dhubri"
+        >
+          <b>Guwahati</b>
+          <span>→</span>
+          <b>Dhubri</b>
+        </button>
+
       </div>
 
-      <div id="bus-results-list" class="bus-results-list">
-        <div class="empty-results">
-          <h3>No search made yet</h3>
-          <p>Enter your journey details above and search for buses.</p>
-        </div>
-      </div>
     </section>
+
+
+    <!-- BUS RESULTS -->
+    <section
+      class="bus-results"
+      id="bus-results"
+    >
+
+      <div class="section-heading">
+
+        <p class="eyebrow">
+          AVAILABLE BUSES
+        </p>
+
+        <h2>
+          Choose Your Bus
+        </h2>
+
+        <p id="results-summary">
+          Search for buses to see available services.
+        </p>
+
+      </div>
+
+
+      <div
+        id="bus-results-list"
+        class="bus-results-list"
+      >
+
+        <div class="empty-results">
+
+          <h3>
+            No search made yet
+          </h3>
+
+          <p>
+            Enter your journey details above and search for buses.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
   </main>
 
+
+  <!-- FOOTER -->
   <footer id="help">
+
     <strong>JANBAHON</strong>
-    <span>Bus booking for Assam &amp; Northeast India.</span>
+
+    <span>
+      Bus booking for Assam &amp; Northeast India.
+    </span>
+
   </footer>
 
+
   <script src="app.js"></script>
+
 </body>
 </html>
