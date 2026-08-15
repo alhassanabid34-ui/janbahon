@@ -1,28 +1,29 @@
 /* =========================================================
-   JANBAHON
-   Responsive Bus Booking Website
-   Assam & Northeast India
+   JANBAHON — Main Website Styles
+   Responsive: Mobile / Tablet / Desktop
    ========================================================= */
 
 :root {
-  --navy: #12325f;
-  --navy-dark: #0b2345;
-  --orange: #ff6b1a;
-  --orange-dark: #e85a0b;
+  --navy: #082b5c;
+  --navy-dark: #061f43;
+  --orange: #f47b20;
+  --orange-dark: #d96512;
   --cream: #fffaf5;
-  --light: #f5f7fa;
   --white: #ffffff;
-  --text: #17243a;
-  --muted: #697586;
-  --border: #e2e7ef;
-  --success: #16834b;
-  --shadow: 0 12px 35px rgba(18, 50, 95, 0.09);
+  --text: #172033;
+  --muted: #6d7788;
+  --border: #e6e9ee;
+  --soft: #f6f8fb;
+  --success: #16824b;
+  --shadow: 0 12px 35px rgba(8, 43, 92, 0.10);
+
+  --container: 1180px;
   --radius: 18px;
 }
 
-/* =========================
+/* =========================================================
    RESET
-   ========================= */
+   ========================================================= */
 
 * {
   box-sizing: border-box;
@@ -34,6 +35,7 @@ html {
 
 body {
   margin: 0;
+  padding: 0;
   font-family: Arial, Helvetica, sans-serif;
   color: var(--text);
   background: var(--white);
@@ -46,8 +48,7 @@ select {
   font: inherit;
 }
 
-button,
-select {
+button {
   cursor: pointer;
 }
 
@@ -56,26 +57,25 @@ a {
   text-decoration: none;
 }
 
-/* =========================
+/* =========================================================
    HEADER
-   ========================= */
+   ========================================================= */
 
 .site-header {
   width: 100%;
-  min-height: 86px;
-  padding: 16px clamp(20px, 5vw, 72px);
-
+  min-height: 78px;
+  padding: 14px 5%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 30px;
 
   background: rgba(255, 255, 255, 0.97);
-  border-bottom: 1px solid #eef1f5;
+  border-bottom: 1px solid var(--border);
 
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
 }
 
 .brand {
@@ -86,24 +86,29 @@ a {
 }
 
 .brand-mark {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
 
   display: grid;
   place-items: center;
 
+  border-radius: 50%;
   background: var(--orange);
   color: white;
-  border-radius: 14px;
 
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.brand > span:last-child {
+  display: flex;
+  flex-direction: column;
 }
 
 .brand strong {
-  display: block;
   color: var(--navy);
-  font-size: 21px;
+  font-size: 20px;
+  line-height: 1;
   letter-spacing: 0.5px;
 }
 
@@ -112,21 +117,20 @@ a {
 }
 
 .brand small {
-  display: block;
-  margin-top: 1px;
+  margin-top: 4px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .site-header nav {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: clamp(16px, 2.2vw, 32px);
+  gap: 24px;
 }
 
 .site-header nav a {
-  color: #35445a;
+  color: var(--navy);
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
@@ -139,8 +143,9 @@ a {
 .site-header nav .signup {
   padding: 11px 20px;
   border-radius: 999px;
-  color: white;
+
   background: var(--orange);
+  color: white;
 }
 
 .site-header nav .signup:hover {
@@ -148,34 +153,33 @@ a {
   color: white;
 }
 
-/* =========================
+/* =========================================================
    HERO
-   ========================= */
+   ========================================================= */
 
 .hero {
-  padding: 90px 20px 80px;
+  padding: 80px 20px 70px;
   background:
     radial-gradient(
-      circle at 50% 0%,
-      rgba(255, 107, 26, 0.08),
-      transparent 38%
+      circle at top right,
+      rgba(244, 123, 32, 0.08),
+      transparent 35%
     ),
     linear-gradient(
       180deg,
-      #f8fafc 0%,
+      #fffaf5 0%,
       #ffffff 100%
     );
 }
 
 .hero-inner {
-  width: min(1180px, 100%);
+  width: min(100%, var(--container));
   margin: 0 auto;
   text-align: center;
 }
 
 .eyebrow {
-  margin: 0 0 12px;
-
+  margin: 0 0 10px;
   color: var(--orange);
   font-size: 13px;
   font-weight: 800;
@@ -184,73 +188,71 @@ a {
 
 .hero h1 {
   margin: 0;
-
   color: var(--navy);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(52px, 7vw, 88px);
-  line-height: 1.02;
-  letter-spacing: -3px;
+  font-size: clamp(48px, 7vw, 82px);
+  line-height: 0.98;
+  letter-spacing: -2px;
 }
 
 .subtitle {
-  margin: 22px 0 48px;
-
-  color: #718096;
-  font-size: clamp(18px, 2vw, 25px);
+  margin: 20px 0 40px;
+  color: var(--muted);
+  font-size: clamp(18px, 2vw, 24px);
 }
 
-/* =========================
+/* =========================================================
    SEARCH CARD
-   ========================= */
+   ========================================================= */
 
 .search-card {
   width: 100%;
-  padding: 26px;
+  padding: 20px;
 
   display: grid;
   grid-template-columns:
-    minmax(0, 1fr)
-    52px
-    minmax(0, 1fr)
-    minmax(190px, 0.9fr);
+    minmax(180px, 1fr)
+    48px
+    minmax(180px, 1fr)
+    minmax(180px, 1fr)
+    180px;
 
-  gap: 14px;
   align-items: end;
+  gap: 12px;
 
-  background: var(--white);
+  background: white;
   border: 1px solid var(--border);
-  border-radius: 24px;
+  border-radius: 22px;
 
   box-shadow: var(--shadow);
   text-align: left;
 }
 
 .search-card label {
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
 }
 
-.search-card label > span {
-  display: block;
-  margin: 0 0 8px 4px;
-
-  color: #5f7088;
-  font-size: 12px;
+.search-card label span {
+  color: var(--navy);
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 1.3px;
 }
 
 .search-card select,
 .search-card input {
   width: 100%;
-  height: 58px;
+  min-height: 52px;
 
-  padding: 0 16px;
+  padding: 0 14px;
 
+  border: 1px solid #dfe3e9;
+  border-radius: 12px;
+
+  background: white;
   color: var(--text);
-  background: #fff;
-
-  border: 1px solid #dce3ec;
-  border-radius: 13px;
 
   outline: none;
 }
@@ -258,52 +260,39 @@ a {
 .search-card select:focus,
 .search-card input:focus {
   border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(255, 107, 26, 0.1);
+  box-shadow: 0 0 0 3px rgba(244, 123, 32, 0.12);
 }
 
 .swap {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
 
-  margin-bottom: 3px;
-
-  border: 1px solid #dce3ec;
+  border: 1px solid var(--border);
   border-radius: 50%;
 
   background: white;
   color: var(--orange);
 
-  font-size: 25px;
+  font-size: 22px;
   font-weight: 700;
-
-  transition: 0.2s ease;
 }
 
 .swap:hover {
-  color: white;
   background: var(--orange);
-  border-color: var(--orange);
-  transform: rotate(180deg);
+  color: white;
 }
 
 .search-btn {
-  grid-column: 1 / -1;
-
-  width: 100%;
-  height: 58px;
-
-  margin-top: 4px;
+  min-height: 52px;
 
   border: none;
-  border-radius: 13px;
+  border-radius: 12px;
 
   background: var(--orange);
   color: white;
 
-  font-size: 16px;
   font-weight: 800;
-
-  transition: 0.2s ease;
+  font-size: 15px;
 }
 
 .search-btn:hover {
@@ -311,57 +300,50 @@ a {
   transform: translateY(-1px);
 }
 
-.search-btn:active {
-  transform: translateY(0);
-}
-
 .demo-note {
-  margin: 20px auto 0;
-  color: #8994a3;
+  margin: 18px 0 0;
+  color: var(--muted);
   font-size: 13px;
 }
 
-/* =========================
-   SECTIONS
-   ========================= */
+/* =========================================================
+   GENERAL SECTIONS
+   ========================================================= */
 
 .routes,
 .bus-results {
-  width: min(1180px, calc(100% - 40px));
+  width: min(100% - 40px, var(--container));
   margin: 0 auto;
-  padding: 90px 0;
-}
-
-.routes {
-  border-bottom: 1px solid #edf0f4;
+  padding: 80px 0;
 }
 
 .section-heading {
-  margin-bottom: 35px;
+  margin-bottom: 34px;
+  text-align: center;
 }
 
 .section-heading .eyebrow {
-  margin-bottom: 8px;
+  margin-bottom: 7px;
 }
 
 .section-heading h2 {
-  margin: 0 0 8px;
-
+  margin: 0;
   color: var(--navy);
 
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(34px, 4vw, 48px);
-  line-height: 1.1;
+  font-size: clamp(34px, 5vw, 54px);
+  line-height: 1.05;
 }
 
-.section-heading > p:last-child {
-  margin: 0;
+.section-heading p:last-child {
+  margin: 12px auto 0;
   color: var(--muted);
+  font-size: 16px;
 }
 
-/* =========================
-   ROUTE CARDS
-   ========================= */
+/* =========================================================
+   POPULAR ROUTES
+   ========================================================= */
 
 .route-grid {
   display: grid;
@@ -370,30 +352,33 @@ a {
 }
 
 .route-card {
-  min-height: 82px;
-
-  padding: 18px 22px;
+  min-height: 88px;
 
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 15px;
+  justify-content: center;
+  gap: 14px;
+
+  padding: 20px;
 
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 16px;
 
   background: white;
   color: var(--navy);
 
-  box-shadow: 0 5px 20px rgba(18, 50, 95, 0.04);
+  box-shadow: 0 5px 20px rgba(8, 43, 92, 0.05);
 
-  transition: 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .route-card:hover {
-  border-color: rgba(255, 107, 26, 0.45);
-  box-shadow: var(--shadow);
   transform: translateY(-3px);
+  border-color: rgba(244, 123, 32, 0.4);
+  box-shadow: var(--shadow);
 }
 
 .route-card span {
@@ -401,166 +386,144 @@ a {
   font-size: 22px;
 }
 
-/* =========================
+/* =========================================================
    BUS RESULTS
-   ========================= */
+   ========================================================= */
 
 .bus-results {
-  scroll-margin-top: 100px;
+  padding-top: 55px;
+  padding-bottom: 90px;
 }
 
+/*
+   IMPORTANT:
+   This is the container that prevents the buses
+   from sticking to the extreme left.
+*/
+
+#bus-results-list,
 .bus-results-list {
   width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
 
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 18px;
 }
 
-/* Main bus card */
+/* =========================================================
+   BUS CARD
+   ========================================================= */
 
 .bus-card {
   width: 100%;
+  min-height: 190px;
+
+  padding: 24px;
 
   display: grid;
-  grid-template-columns: minmax(180px, 1.15fr) minmax(220px, 1fr) auto;
-  gap: 28px;
+  grid-template-columns: 1.3fr 1fr 1fr auto;
   align-items: center;
-
-  padding: 26px 30px;
+  gap: 24px;
 
   background: white;
+
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 20px;
 
-  box-shadow: 0 8px 28px rgba(18, 50, 95, 0.07);
+  box-shadow: 0 8px 28px rgba(8, 43, 92, 0.08);
 
-  transition: 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .bus-card:hover {
-  border-color: rgba(255, 107, 26, 0.35);
-  box-shadow: 0 14px 35px rgba(18, 50, 95, 0.11);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  border-color: rgba(244, 123, 32, 0.35);
+  box-shadow: 0 14px 35px rgba(8, 43, 92, 0.12);
 }
 
 /* Operator */
 
 .bus-operator {
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .bus-operator small {
-  display: block;
-
-  margin-bottom: 6px;
-
   color: var(--orange);
-
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 1.4px;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
 .bus-operator h3 {
-  margin: 0 0 8px;
+  margin: 0;
 
   color: var(--navy);
   font-size: 21px;
   line-height: 1.2;
 }
 
+/* Bus type */
+
 .bus-type {
-  display: inline-block;
+  color: var(--muted);
+  font-size: 14px;
+}
 
-  padding: 5px 9px;
+.bus-price {
+  margin-top: 8px;
 
-  border-radius: 7px;
-
-  background: #f2f5f8;
-  color: #637085;
-
-  font-size: 12px;
-  font-weight: 700;
+  color: var(--navy);
+  font-size: 17px;
+  font-weight: 800;
 }
 
 /* Journey */
 
 .bus-journey {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 14px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .bus-time {
   color: var(--navy);
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 800;
 }
 
 .bus-place {
-  display: block;
-  margin-top: 3px;
-
-  color: #68778c;
-  font-size: 13px;
-}
-
-.bus-line {
-  width: 70px;
-  height: 1px;
-  background: #dce2e9;
-  position: relative;
-}
-
-.bus-line::after {
-  content: "→";
-
-  position: absolute;
-  right: -5px;
-  top: -13px;
-
-  color: var(--orange);
-  font-size: 18px;
+  color: var(--text);
+  font-size: 14px;
 }
 
 .bus-duration {
-  margin-top: 6px;
-  color: #8a95a3;
-  font-size: 11px;
-  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
 }
 
-/* Price / booking */
-
-.bus-action {
-  min-width: 155px;
-  text-align: right;
-}
-
-.bus-price {
-  margin-bottom: 5px;
-
-  color: var(--navy);
-  font-size: 21px;
-  font-weight: 800;
-}
+/* Seats */
 
 .bus-seats {
-  margin-bottom: 13px;
-
   color: var(--success);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
-.book-seat {
-  width: 100%;
+/* Button */
 
+.book-seat {
+  min-width: 120px;
   min-height: 44px;
-  padding: 10px 18px;
+
+  padding: 0 18px;
 
   border: none;
   border-radius: 10px;
@@ -568,33 +531,33 @@ a {
   background: var(--orange);
   color: white;
 
-  font-size: 14px;
   font-weight: 800;
-
-  transition: 0.2s ease;
+  font-size: 14px;
 }
 
 .book-seat:hover {
   background: var(--orange-dark);
 }
 
-/* Empty results */
+/* =========================================================
+   EMPTY RESULTS
+   ========================================================= */
 
 .empty-results {
   width: 100%;
-
   padding: 55px 25px;
 
   text-align: center;
 
-  background: #f8fafc;
-  border: 1px dashed #dce3eb;
-  border-radius: var(--radius);
+  background: var(--soft);
+  border: 1px dashed #d8dde5;
+  border-radius: 18px;
 }
 
 .empty-results h3 {
   margin: 0 0 8px;
   color: var(--navy);
+  font-size: 20px;
 }
 
 .empty-results p {
@@ -602,18 +565,17 @@ a {
   color: var(--muted);
 }
 
-/* =========================
+/* =========================================================
    FOOTER
-   ========================= */
+   ========================================================= */
 
 footer {
   padding: 45px 20px;
 
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  gap: 15px;
-  flex-wrap: wrap;
+  gap: 7px;
 
   background: var(--navy);
   color: white;
@@ -622,22 +584,23 @@ footer {
 }
 
 footer strong {
-  color: white;
+  font-size: 20px;
+  letter-spacing: 1px;
 }
 
 footer span {
-  color: #c8d2df;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
 }
 
-/* =========================
-   TABLET
-   iPad / iPad Pro
-   ========================= */
+/* =========================================================
+   TABLET — iPad
+   ========================================================= */
 
-@media (max-width: 1000px) {
+@media (max-width: 1024px) {
 
   .site-header {
-    padding: 14px 25px;
+    padding: 14px 4%;
   }
 
   .site-header nav {
@@ -648,20 +611,16 @@ footer span {
     font-size: 13px;
   }
 
-  .hero {
-    padding-top: 70px;
-  }
-
   .search-card {
-    grid-template-columns: 1fr 52px 1fr;
+    grid-template-columns: 1fr 48px 1fr;
   }
 
   .search-card label:nth-of-type(3) {
-    grid-column: 1 / 3;
+    grid-column: 1 / 2;
   }
 
   .search-btn {
-    grid-column: 1 / -1;
+    grid-column: 2 / 4;
   }
 
   .route-grid {
@@ -669,43 +628,28 @@ footer span {
   }
 
   .bus-card {
-    grid-template-columns: 1fr 1.2fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .bus-action {
-    grid-column: 1 / -1;
-
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-
-    text-align: left;
-  }
-
-  .bus-action .bus-seats {
-    margin: 0;
-  }
-
-  .book-seat {
-    width: auto;
-    min-width: 150px;
+    justify-content: flex-end;
   }
 }
 
-/* =========================
-   MOBILE
-   ========================= */
+/* =========================================================
+   MOBILE — Phones
+   ========================================================= */
 
 @media (max-width: 700px) {
 
   .site-header {
     min-height: auto;
-    padding: 12px 16px;
+    padding: 13px 18px;
 
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 14px;
 
     position: relative;
   }
@@ -717,63 +661,74 @@ footer span {
   .site-header nav {
     width: 100%;
 
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    justify-content: flex-start;
 
-    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 3px;
 
-    text-align: center;
+    gap: 18px;
+
+    scrollbar-width: none;
+  }
+
+  .site-header nav::-webkit-scrollbar {
+    display: none;
   }
 
   .site-header nav a {
-    padding: 9px 5px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .site-header nav .signup {
-    padding: 9px 5px;
+    padding: 9px 16px;
   }
 
+  /* HERO */
+
   .hero {
-    padding: 55px 15px 50px;
+    padding: 55px 16px 45px;
   }
 
   .hero h1 {
     font-size: clamp(43px, 13vw, 62px);
-    letter-spacing: -2px;
+    letter-spacing: -1.5px;
   }
 
   .subtitle {
-    margin: 15px 0 30px;
+    margin-bottom: 28px;
     font-size: 18px;
   }
 
+  /* SEARCH */
+
   .search-card {
-    grid-template-columns: 1fr;
-    padding: 18px;
+    padding: 16px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: stretch;
+    gap: 12px;
 
     border-radius: 18px;
   }
 
-  .search-card label:nth-of-type(3) {
-    grid-column: auto;
-  }
-
   .swap {
-    width: 42px;
-    height: 42px;
-
-    margin: -2px auto;
+    align-self: center;
+    transform: rotate(90deg);
   }
 
   .search-btn {
-    height: 54px;
+    width: 100%;
   }
+
+  /* SECTIONS */
 
   .routes,
   .bus-results {
-    width: min(100% - 30px, 1180px);
-    padding: 60px 0;
+    width: min(100% - 28px, var(--container));
+    padding: 55px 0;
   }
 
   .section-heading {
@@ -781,114 +736,94 @@ footer span {
   }
 
   .section-heading h2 {
-    font-size: 35px;
+    font-size: 38px;
   }
+
+  .section-heading p:last-child {
+    font-size: 14px;
+  }
+
+  /* ROUTES */
 
   .route-grid {
     grid-template-columns: 1fr;
   }
 
-  /* BUS CARD MOBILE */
+  .route-card {
+    min-height: 70px;
+  }
 
+  /* BUS RESULTS */
+
+  #bus-results-list,
   .bus-results-list {
+    width: 100%;
+    margin: 0 auto;
     gap: 14px;
   }
 
   .bus-card {
-    grid-template-columns: 1fr;
+    width: 100%;
 
-    gap: 20px;
+    padding: 20px;
 
-    padding: 20px 18px;
+    display: flex;
+    flex-direction: column;
 
-    border-radius: 16px;
+    align-items: stretch;
+    gap: 17px;
+
+    border-radius: 17px;
   }
 
   .bus-operator h3 {
     font-size: 19px;
   }
 
+  .bus-price {
+    margin-top: 5px;
+  }
+
   .bus-journey {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    padding: 14px 0;
 
-    padding: 15px 0;
-
-    border-top: 1px solid #edf0f4;
-    border-bottom: 1px solid #edf0f4;
-  }
-
-  .bus-line {
-    display: none;
-  }
-
-  .bus-duration {
-    text-align: left;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
   }
 
   .bus-action {
-    grid-column: auto;
-
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-
-    gap: 12px;
-
-    text-align: left;
-  }
-
-  .bus-price {
-    font-size: 19px;
+    width: 100%;
   }
 
   .book-seat {
-    min-width: 120px;
-  }
-
-  footer {
-    flex-direction: column;
-    gap: 5px;
-    padding: 35px 20px;
+    width: 100%;
   }
 }
 
-/* =========================
-   SMALL MOBILE
-   ========================= */
+/* =========================================================
+   SMALL PHONES
+   ========================================================= */
 
 @media (max-width: 400px) {
-
-  .brand strong {
-    font-size: 19px;
-  }
-
-  .brand-mark {
-    width: 43px;
-    height: 43px;
-  }
-
-  .site-header nav {
-    grid-template-columns: repeat(2, 1fr);
-  }
 
   .hero h1 {
     font-size: 42px;
   }
 
-  .search-card {
-    padding: 15px;
+  .brand strong {
+    font-size: 18px;
+  }
+
+  .routes,
+  .bus-results {
+    width: calc(100% - 22px);
   }
 
   .bus-card {
-    padding: 17px 15px;
+    padding: 17px;
   }
 
-  .bus-action {
-    grid-template-columns: 1fr;
-  }
-
-  .book-seat {
-    width: 100%;
+  .section-heading h2 {
+    font-size: 33px;
   }
 }
