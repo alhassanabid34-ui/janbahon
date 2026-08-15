@@ -12,74 +12,13 @@ const resultsSummary = document.getElementById("results-summary");
    32 / 40 / 44 / 36 / 48.
    ========================================================= */
 const buses = [
-  {
-    id: "astc-mankachar-express",
-    operator: "ASTC",
-    name: "Mankachar Express",
-    type: "AC Seater",
-    price: 480,
-    from: "Mankachar",
-    to: "Guwahati",
-    departure: "05:30 AM",
-    arrival: "01:00 PM",
-    duration: "7h 30m",
-    seats: 32
-  },
-  {
-    id: "janbahon-south-assam",
-    operator: "JANBAHON",
-    name: "South Assam Travels",
-    type: "Non-AC Seater",
-    price: 390,
-    from: "Mankachar",
-    to: "Guwahati",
-    departure: "07:30 AM",
-    arrival: "03:30 PM",
-    duration: "8h",
-    seats: 40
-  },
-  {
-    id: "assam-roadways-brahmaputra",
-    operator: "Assam Roadways",
-    name: "Brahmaputra Superfast",
-    type: "AC Seater",
-    price: 520,
-    from: "Mankachar",
-    to: "Guwahati",
-    departure: "06:15 AM",
-    arrival: "01:45 PM",
-    duration: "7h 30m",
-    seats: 44
-  },
-  {
-    id: "janbahon-barak-valley",
-    operator: "JANBAHON",
-    name: "Barak Valley Express",
-    type: "Non-AC Seater",
-    price: 360,
-    from: "Mankachar",
-    to: "Guwahati",
-    departure: "08:00 AM",
-    arrival: "04:30 PM",
-    duration: "8h 30m",
-    seats: 36
-  },
-  {
-    id: "northeast-night-rider",
-    operator: "Northeast Travels",
-    name: "Assam Night Rider",
-    type: "AC Seater",
-    price: 550,
-    from: "Mankachar",
-    to: "Guwahati",
-    departure: "09:00 PM",
-    arrival: "05:30 AM",
-    duration: "8h 30m",
-    seats: 48
-  }
+  { id: "astc-mankachar-express", operator: "ASTC", name: "Mankachar Express", type: "AC Seater", price: 480, from: "Mankachar", to: "Guwahati", departure: "05:30 AM", arrival: "01:00 PM", duration: "7h 30m", seats: 32 },
+  { id: "janbahon-south-assam", operator: "JANBAHON", name: "South Assam Travels", type: "Non-AC Seater", price: 390, from: "Mankachar", to: "Guwahati", departure: "07:30 AM", arrival: "03:30 PM", duration: "8h", seats: 40 },
+  { id: "assam-roadways-brahmaputra", operator: "Assam Roadways", name: "Brahmaputra Superfast", type: "AC Seater", price: 520, from: "Mankachar", to: "Guwahati", departure: "06:15 AM", arrival: "01:45 PM", duration: "7h 30m", seats: 44 },
+  { id: "janbahon-barak-valley", operator: "JANBAHON", name: "Barak Valley Express", type: "Non-AC Seater", price: 360, from: "Mankachar", to: "Guwahati", departure: "08:00 AM", arrival: "04:30 PM", duration: "8h 30m", seats: 36 },
+  { id: "northeast-night-rider", operator: "Northeast Travels", name: "Assam Night Rider", type: "AC Seater", price: 550, from: "Mankachar", to: "Guwahati", departure: "09:00 PM", arrival: "05:30 AM", duration: "8h 30m", seats: 48 }
 ];
 
-/* Use today's local date as the minimum selectable journey date. */
 function getLocalISODate() {
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60000;
@@ -91,17 +30,10 @@ if (dateInput) {
   if (!dateInput.value) dateInput.value = dateInput.min;
 }
 
-/* =========================================================
-   HELPERS
-   ========================================================= */
 function formatDate(value) {
   if (!value) return "";
   const date = new Date(`${value}T00:00:00`);
-  return date.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric"
-  });
+  return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
 function escapeHTML(value) {
@@ -113,9 +45,6 @@ function escapeHTML(value) {
     .replaceAll("'", "&#039;");
 }
 
-/* =========================================================
-   SEARCH
-   ========================================================= */
 function searchBuses() {
   const from = fromInput.value;
   const to = toInput.value;
@@ -129,13 +58,8 @@ function searchBuses() {
   }
 
   const matches = buses.filter(bus => bus.from === from && bus.to === to);
-
   renderResults(matches, from, to, date);
-
-  resultsSection.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
+  resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function renderResults(matches, from, to, date) {
@@ -148,8 +72,7 @@ function renderResults(matches, from, to, date) {
         <div class="empty-results-icon">⌕</div>
         <h3>No buses found for this route</h3>
         <p>Try another route or check the journey date.</p>
-      </div>
-    `;
+      </div>`;
     return;
   }
 
@@ -162,19 +85,16 @@ function renderResults(matches, from, to, date) {
       <div class="bus-operator-block">
         <div class="bus-operator">${escapeHTML(bus.operator)}</div>
       </div>
-
       <div class="bus-info">
         <h3>${escapeHTML(bus.name)}</h3>
         <p class="bus-type">${escapeHTML(bus.type)}</p>
         <p class="bus-price">₹${bus.price.toLocaleString("en-IN")} <span>per seat</span></p>
       </div>
-
       <div class="bus-journey-line">
         <div class="journey-point">
           <strong>${escapeHTML(bus.from)}</strong>
           <span>${escapeHTML(bus.departure)}</span>
         </div>
-
         <div class="journey-track" aria-hidden="true">
           <span class="track-dot"></span>
           <span class="track-line"></span>
@@ -183,18 +103,15 @@ function renderResults(matches, from, to, date) {
           <span class="track-dot"></span>
           <small>${escapeHTML(bus.duration)}</small>
         </div>
-
         <div class="journey-point journey-arrival">
           <strong>${escapeHTML(bus.to)}</strong>
           <span>${escapeHTML(bus.arrival)}</span>
         </div>
       </div>
-
       <div class="bus-action">
         <span class="bus-seats">${bus.seats} seats</span>
         <button class="book-seat" type="button">Book Seat</button>
-      </div>
-    `;
+      </div>`;
 
     card.querySelector(".book-seat").addEventListener("click", () => openSeatModal(bus));
     resultsList.appendChild(card);
@@ -211,18 +128,12 @@ searchForm?.addEventListener("submit", event => {
   searchBuses();
 });
 
-/* =========================================================
-   SWAP
-   ========================================================= */
 document.getElementById("swap")?.addEventListener("click", () => {
   const currentFrom = fromInput.value;
   fromInput.value = toInput.value;
   toInput.value = currentFrom;
 });
 
-/* =========================================================
-   POPULAR ROUTES
-   ========================================================= */
 document.querySelectorAll(".route-card").forEach(card => {
   card.addEventListener("click", () => {
     fromInput.value = card.dataset.from || "";
@@ -234,10 +145,12 @@ document.querySelectorAll(".route-card").forEach(card => {
 
 /* =========================================================
    SEAT MODAL
-   2 + 1 bus layout similar to the provided reference.
+   Multi-seat selection + 2+1 layout.
+   The two seats are attached together on the RIGHT side,
+   while the single seat is on the LEFT side.
    ========================================================= */
 let activeBus = null;
-let selectedSeat = null;
+let selectedSeats = new Set();
 let seatModal = null;
 
 function createSeatModal() {
@@ -249,27 +162,23 @@ function createSeatModal() {
     <div class="seat-overlay" role="dialog" aria-modal="true" aria-label="Seat selection">
       <div class="seat-modal-box">
         <button class="close-seat-modal" type="button" aria-label="Close">×</button>
-
         <div class="seat-modal-header">
-          <p class="seat-modal-label">SELECT YOUR SEAT</p>
+          <p class="seat-modal-label">SELECT YOUR SEATS</p>
           <h2 id="seat-bus-name"></h2>
           <p id="seat-bus-meta"></p>
         </div>
-
         <div class="seat-legend">
           <span><i class="legend available"></i> Available</span>
           <span><i class="legend selected"></i> Selected</span>
           <span><i class="legend booked"></i> Booked</span>
         </div>
-
         <div class="bus-layout">
           <div class="driver">DRIVER</div>
           <div class="seat-grid" id="modal-seat-grid"></div>
         </div>
-
         <div class="booking-summary">
           <div>
-            <span>Selected Seat</span>
+            <span>Selected Seats</span>
             <strong id="modal-selected-seat">None</strong>
           </div>
           <div>
@@ -277,13 +186,9 @@ function createSeatModal() {
             <strong id="modal-total-fare">₹0</strong>
           </div>
         </div>
-
-        <button class="continue-booking" id="continue-booking" type="button" disabled>
-          Continue
-        </button>
+        <button class="continue-booking" id="continue-booking" type="button" disabled>Continue</button>
       </div>
-    </div>
-  `;
+    </div>`;
 
   document.body.appendChild(seatModal);
 
@@ -292,13 +197,13 @@ function createSeatModal() {
     if (event.target.classList.contains("seat-overlay")) closeSeatModal();
   });
   seatModal.querySelector("#continue-booking").addEventListener("click", () => {
-    if (!activeBus || !selectedSeat) return;
-    alert(`Seat ${selectedSeat} selected on ${activeBus.name}.\n\nNext step: passenger details and payment.`);
+    if (!activeBus || selectedSeats.size === 0) return;
+    const seats = [...selectedSeats].sort((a, b) => a - b).join(", ");
+    alert(`Seats ${seats} selected on ${activeBus.name}.\n\nTotal fare: ₹${(selectedSeats.size * activeBus.price).toLocaleString("en-IN")}\n\nNext step: passenger details and payment.`);
   });
 }
 
 function getBookedSeats(bus) {
-  /* Deterministic pattern: every bus gets its own occupied seats. */
   const count = Math.max(3, Math.floor(bus.seats * 0.18));
   const booked = new Set();
   let seed = bus.seats + bus.price;
@@ -308,22 +213,19 @@ function getBookedSeats(bus) {
     const seat = Math.floor((seed / 233280) * bus.seats) + 1;
     booked.add(seat);
   }
-
   return booked;
 }
 
 function openSeatModal(bus) {
   createSeatModal();
   activeBus = bus;
-  selectedSeat = null;
+  selectedSeats = new Set();
 
   document.getElementById("seat-bus-name").textContent = bus.name;
   document.getElementById("seat-bus-meta").textContent = `${bus.type} • ₹${bus.price.toLocaleString("en-IN")} per seat • ${bus.seats} total seats`;
-  document.getElementById("modal-selected-seat").textContent = "None";
-  document.getElementById("modal-total-fare").textContent = "₹0";
-  document.getElementById("continue-booking").disabled = true;
 
   renderSeatGrid(bus);
+  updateSeatSummary();
 
   seatModal.classList.add("open");
   document.body.classList.add("modal-open");
@@ -338,7 +240,6 @@ function closeSeatModal() {
 function renderSeatGrid(bus) {
   const grid = document.getElementById("modal-seat-grid");
   grid.innerHTML = "";
-
   const bookedSeats = getBookedSeats(bus);
 
   for (let seatNumber = 1; seatNumber <= bus.seats; seatNumber++) {
@@ -348,43 +249,50 @@ function renderSeatGrid(bus) {
     seat.textContent = seatNumber;
     seat.setAttribute("aria-label", `Seat ${seatNumber}`);
 
-    /* 2 + 1 arrangement: two seats on the left, aisle, one on right. */
+    /* 2+1 layout: single seat LEFT, two attached seats RIGHT. */
     const position = (seatNumber - 1) % 3;
-    if (position === 0) seat.classList.add("left-seat");
-    if (position === 1) seat.classList.add("left-seat");
-    if (position === 2) seat.classList.add("right-seat");
+    if (position === 0) seat.classList.add("single-left-seat");
+    else seat.classList.add("right-pair-seat");
 
     if (bookedSeats.has(seatNumber)) {
       seat.classList.add("booked");
       seat.disabled = true;
     } else {
-      seat.addEventListener("click", () => selectSeat(seatNumber));
+      seat.addEventListener("click", () => toggleSeat(seatNumber));
     }
 
     grid.appendChild(seat);
   }
 }
 
-function selectSeat(seatNumber) {
-  selectedSeat = seatNumber;
+function toggleSeat(seatNumber) {
+  if (!activeBus) return;
 
-  document.querySelectorAll("#modal-seat-grid .seat.selected").forEach(seat => {
-    seat.classList.remove("selected");
-  });
+  if (selectedSeats.has(seatNumber)) {
+    selectedSeats.delete(seatNumber);
+  } else {
+    selectedSeats.add(seatNumber);
+  }
 
   const selectedButton = [...document.querySelectorAll("#modal-seat-grid .seat")]
     .find(button => Number(button.textContent) === seatNumber);
 
-  selectedButton?.classList.add("selected");
-
-  document.getElementById("modal-selected-seat").textContent = `Seat ${seatNumber}`;
-  document.getElementById("modal-total-fare").textContent = `₹${activeBus.price.toLocaleString("en-IN")}`;
-  document.getElementById("continue-booking").disabled = false;
+  selectedButton?.classList.toggle("selected", selectedSeats.has(seatNumber));
+  updateSeatSummary();
 }
 
-/* Escape key closes the seat modal. */
+function updateSeatSummary() {
+  if (!activeBus) return;
+
+  const seats = [...selectedSeats].sort((a, b) => a - b);
+  const selectedText = seats.length ? seats.map(seat => `Seat ${seat}`).join(", ") : "None";
+  const total = seats.length * activeBus.price;
+
+  document.getElementById("modal-selected-seat").textContent = selectedText;
+  document.getElementById("modal-total-fare").textContent = `₹${total.toLocaleString("en-IN")}`;
+  document.getElementById("continue-booking").disabled = seats.length === 0;
+}
+
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && seatModal?.classList.contains("open")) {
-    closeSeatModal();
-  }
+  if (event.key === "Escape" && seatModal?.classList.contains("open")) closeSeatModal();
 });
