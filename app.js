@@ -1,1196 +1,554 @@
-/* =========================================================
-   JANBAHON — BUS BOOKING APPLICATION
-   ========================================================= */
-
-const dateInput = document.getElementById("date");
-const today = new Date();
-
-const isoToday = new Date(
-  today.getTime() - today.getTimezoneOffset() * 60000
-)
-  .toISOString()
-  .slice(0, 10);
-
-dateInput.min = isoToday;
-
-
-/* =========================================================
-   BUS DATA
-   Different buses have different seat capacities
-   Minimum: 32
-   Maximum: 48
-   ========================================================= */
-
-const buses = [
-
-  {
-    operator: "ASTC",
-    name: "Mankachar Express",
-    type: "AC Seater",
-    price: 480,
-    departure: "05:30 AM",
-    arrival: "01:00 PM",
-    duration: "7h 30m",
-    seats: 32
-  },
-
-  {
-    operator: "JANBAHON",
-    name: "South Assam Travels",
-    type: "Non-AC Seater",
-    price: 390,
-    departure: "07:30 AM",
-    arrival: "03:30 PM",
-    duration: "8h",
-    seats: 40
-  },
-
-  {
-    operator: "Assam Roadways",
-    name: "Brahmaputra Superfast",
-    type: "AC Seater",
-    price: 520,
-    departure: "06:15 AM",
-    arrival: "01:45 PM",
-    duration: "7h 30m",
-    seats: 44
-  },
-
-  {
-    operator: "JANBAHON",
-    name: "Barak Valley Express",
-    type: "Non-AC Seater",
-    price: 360,
-    departure: "08:00 AM",
-    arrival: "04:30 PM",
-    duration: "8h 30m",
-    seats: 36
-  },
-
-  {
-    operator: "Northeast Travels",
-    name: "Assam Night Rider",
-    type: "AC Seater",
-    price: 550,
-    departure: "09:00 PM",
-    arrival: "05:30 AM",
-    duration: "8h 30m",
-    seats: 48
-  }
-
-];
-
-
-/* =========================================================
-   ROUTE BUTTONS
-   ========================================================= */
-
-document.querySelectorAll(".route-card").forEach(card => {
-
-  card.addEventListener("click", () => {
-
-    document.getElementById("from").value =
-      card.dataset.from;
-
-    document.getElementById("to").value =
-      card.dataset.to;
-
-    document.getElementById("booking").scrollIntoView({
-      behavior: "smooth"
-    });
-
-    dateInput.focus();
-
-  });
-
-});
-
-
-/* =========================================================
-   SWAP BUTTON
-   ========================================================= */
-
-document.getElementById("swap").addEventListener("click", () => {
-
-  const from = document.getElementById("from");
-  const to = document.getElementById("to");
-
-  const temporary = from.value;
-
-  from.value = to.value;
-  to.value = temporary;
-
-});
-
-
-/* =========================================================
-   SEARCH BUS
-   ========================================================= */
-
-document
-  .getElementById("searchForm")
-  .addEventListener("submit", function(event) {
-
-    event.preventDefault();
-
-    const from =
-      document.getElementById("from").value;
-
-    const to =
-      document.getElementById("to").value;
-
-    const date =
-      document.getElementById("date").value;
-
-    if (!from || !to || !date) {
-
-      alert("Please select origin, destination and journey date.");
-
-      return;
-    }
-
-
-    if (from === to) {
-
-      alert("Origin and destination cannot be the same.");
-
-      return;
-    }
-
-
-    displayBuses(from, to, date);
-
-  });
-
-
-/* =========================================================
-   DISPLAY BUS RESULTS
-   ========================================================= */
-
-function displayBuses(from, to, date) {
-
-  const resultsSection =
-    document.getElementById("bus-results");
-
-  const resultsList =
-    document.getElementById("bus-results-list");
-
-  const resultsSummary =
-    document.getElementById("results-summary");
-
-
-  resultsList.innerHTML = "";
-
-
-  resultsSummary.textContent =
-    `${from} → ${to} • ${formatDate(date)} • ${buses.length} bus services found`;
-
-
-  buses.forEach((bus, index) => {
-
-    const card = document.createElement("article");
-
-    card.className = "bus-card";
-
-
-    card.innerHTML = `
-
-      <div class="bus-operator">
-        ${bus.operator}
-      </div>
-
-      <div class="bus-main">
-
-        <div class="bus-info">
-
-          <h3>${bus.name}</h3>
-
-          <p class="bus-type">
-            ${bus.type}
-          </p>
-
-          <p class="bus-price">
-            ₹${bus.price}
-            <span>per seat</span>
-          </p>
-
-        </div>
-
-
-        <div class="bus-timing">
-
-          <div>
-            <strong>${bus.departure}</strong>
-            <span>${from}</span>
-          </div>
-
-          <div class="duration">
-            ${bus.duration}
-          </div>
-
-          <div>
-            <strong>${bus.arrival}</strong>
-            <span>${to}</span>
-          </div>
-
-        </div>
-
-
-        <div class="bus-action">
-
-          <span class="seat-count">
-            ${bus.seats} seats
-          </span>
-
-          <button
-            class="book-seat"
-            type="button"
-            data-index="${index}"
-          >
-            Book Seat
-          </button>
-
-        </div>
-
-      </div>
-
-    `;
-
-
-    resultsList.appendChild(card);
-
-  });
-
-
-  /*
-     Connect Book Seat buttons
-  */
-
-  document
-    .querySelectorAll(".book-seat")
-    .forEach(button => {
-
-      button.addEventListener("click", () => {
-
-        const bus =
-          buses[Number(button.dataset.index)];
-
-        openSeatSelection(bus);
-
-      });
-
-    });
-
-
-  /*
-     Scroll to results
-  */
-
-  resultsSection.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-
-}
-
-
-/* =========================================================
-   FORMAT DATE
-   ========================================================= */
-
-function formatDate(dateString) {
-
-  const date = new Date(dateString + "T00:00:00");
-
-  return date.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric"
-  });
-
-}
-
-
-/* =========================================================
-   SEAT SELECTION MODAL
-   ========================================================= */
-
-function openSeatSelection(bus) {
-
-  /*
-     Remove previous modal
-  */
-
-  const oldModal =
-    document.getElementById("seat-modal");
-
-  if (oldModal) {
-    oldModal.remove();
-  }
-
-
-  /*
-     Randomly create some already-booked seats.
-     This makes the demonstration look realistic.
-  */
-
-  const bookedSeats = generateBookedSeats(bus.seats);
-
-
-  /*
-     Create modal
-  */
-
-  const modal =
-    document.createElement("div");
-
-  modal.id = "seat-modal";
-
-  modal.innerHTML = `
-
-    <div class="seat-overlay">
-
-      <div class="seat-modal-box">
-
-        <button
-          class="close-seat-modal"
-          id="close-seat-modal"
-          type="button"
-          aria-label="Close"
-        >
-          ×
-        </button>
-
-
-        <div class="seat-modal-header">
-
-          <p class="seat-modal-label">
-            SELECT YOUR SEAT
-          </p>
-
-          <h2>
-            ${bus.name}
-          </h2>
-
-          <p>
-            ${bus.type} • ₹${bus.price} per seat
-          </p>
-
-        </div>
-
-
-        <div class="seat-legend">
-
-          <span>
-            <i class="legend available"></i>
-            Available
-          </span>
-
-          <span>
-            <i class="legend selected"></i>
-            Selected
-          </span>
-
-          <span>
-            <i class="legend booked"></i>
-            Booked
-          </span>
-
-        </div>
-
-
-        <div class="bus-layout">
-
-          <div class="driver">
-            DRIVER
-          </div>
-
-          <div
-            class="seat-grid"
-            id="seat-grid"
-          >
-          </div>
-
-        </div>
-
-
-        <div class="booking-summary">
-
-          <div>
-
-            <span>Selected Seat</span>
-
-            <strong id="selected-seat">
-              None
-            </strong>
-
-          </div>
-
-
-          <div>
-
-            <span>Total Fare</span>
-
-            <strong id="selected-fare">
-              ₹0
-            </strong>
-
-          </div>
-
-        </div>
-
-
-        <button
-          class="continue-booking"
-          id="continue-booking"
-          type="button"
-          disabled
-        >
-          Continue
-        </button>
-
-      </div>
-
-    </div>
-
-  `;
-
-
-  document.body.appendChild(modal);
-
-
-  /*
-     Create seats
-  */
-
-  const seatGrid =
-    document.getElementById("seat-grid");
-
-
-  for (let seatNumber = 1; seatNumber <= bus.seats; seatNumber++) {
-
-    const seat =
-      document.createElement("button");
-
-    seat.type = "button";
-
-    seat.className = "seat";
-
-    seat.textContent = seatNumber;
-
-    seat.dataset.seat = seatNumber;
-
-
-    /*
-       Already booked
-    */
-
-    if (bookedSeats.includes(seatNumber)) {
-
-      seat.classList.add("booked");
-
-      seat.disabled = true;
-
-    }
-
-
-    seatGrid.appendChild(seat);
-
-  }
-
-
-  /*
-     Seat selection
-  */
-
-  let selectedSeat = null;
-
-
-  document
-    .querySelectorAll(".seat:not(.booked)")
-    .forEach(seat => {
-
-      seat.addEventListener("click", () => {
-
-        /*
-           Remove previous selection
-        */
-
-        document
-          .querySelectorAll(".seat.selected")
-          .forEach(item => {
-
-            item.classList.remove("selected");
-
-          });
-
-
-        /*
-           Select current seat
-        */
-
-        seat.classList.add("selected");
-
-        selectedSeat =
-          seat.dataset.seat;
-
-
-        document.getElementById("selected-seat")
-          .textContent =
-          `Seat ${selectedSeat}`;
-
-
-        document.getElementById("selected-fare")
-          .textContent =
-          `₹${bus.price}`;
-
-
-        document.getElementById("continue-booking")
-          .disabled = false;
-
-      });
-
-    });
-
-
-  /*
-     Close modal
-  */
-
-  document
-    .getElementById("close-seat-modal")
-    .addEventListener("click", () => {
-
-      modal.remove();
-
-    });
-
-
-  /*
-     Click outside modal to close
-  */
-
-  document
-    .querySelector(".seat-overlay")
-    .addEventListener("click", event => {
-
-      if (
-        event.target.classList.contains(
-          "seat-overlay"
-        )
-      ) {
-
-        modal.remove();
-
-      }
-
-    });
-
-
-  /*
-     Continue booking
-  */
-
-  document
-    .getElementById("continue-booking")
-    .addEventListener("click", () => {
-
-      if (!selectedSeat) {
-        return;
-      }
-
-
-      alert(
-        `Seat ${selectedSeat} selected for ${bus.name}.\n\n` +
-        `Fare: ₹${bus.price}\n\n` +
-        `Passenger details and payment will be added next.`
-      );
-
-    });
-
-}
-
-
-/* =========================================================
-   GENERATE BOOKED SEATS
-   ========================================================= */
-
-function generateBookedSeats(totalSeats) {
-
-  const booked = [];
-
-  /*
-     Number of already booked seats:
-     approximately 10–25%
-  */
-
-  const numberOfBookedSeats =
-    Math.max(
-      3,
-      Math.floor(totalSeats * 0.15)
-    );
-
-
-  while (booked.length < numberOfBookedSeats) {
-
-    const randomSeat =
-      Math.floor(
-        Math.random() * totalSeats
-      ) + 1;
-
-
-    if (!booked.includes(randomSeat)) {
-
-      booked.push(randomSeat);
-
-    }
-
-  }
-
-
-  return booked;
-
-}
-
-
-/* =========================================================
-   SEAT MODAL STYLES
-   These styles are added automatically.
-   No need to edit styles.css for this step.
-   ========================================================= */
-
-const seatStyles =
-document.createElement("style");
-
+const seatStyles = document.createElement("style");
 
 seatStyles.textContent = `
 
-/* -----------------------------------------
-   MODAL OVERLAY
------------------------------------------ */
+/* =========================================
+   JANBAHON SEAT SELECTION
+   ========================================= */
 
-.seat-overlay {
-
-  position: fixed;
-
-  inset: 0;
-
-  z-index: 9999;
-
-  background: rgba(8, 24, 45, 0.72);
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  padding: 20px;
-
-  overflow-y: auto;
-
+#seat-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
 }
 
 
-/* -----------------------------------------
-   MODAL
------------------------------------------ */
+/* OVERLAY */
 
-.seat-modal-box {
+#seat-modal .seat-overlay {
+  position: fixed !important;
+  inset: 0 !important;
 
-  width: min(720px, 100%);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 
-  max-height: 92vh;
+  padding: 20px !important;
 
-  overflow-y: auto;
+  background: rgba(12, 31, 55, 0.72) !important;
 
-  background: #ffffff;
+  overflow-y: auto !important;
+}
 
-  border-radius: 24px;
 
-  padding: 30px;
+/* MODAL */
 
-  position: relative;
+#seat-modal .seat-modal-box {
+  position: relative !important;
+
+  width: min(720px, 100%) !important;
+  max-height: 92vh !important;
+
+  overflow-y: auto !important;
+
+  background: #ffffff !important;
+
+  border-radius: 24px !important;
+
+  padding: 30px !important;
 
   box-shadow:
-    0 25px 70px rgba(0,0,0,0.25);
+    0 25px 70px rgba(0, 0, 0, 0.28) !important;
 
+  box-sizing: border-box !important;
 }
 
 
-/* -----------------------------------------
-   CLOSE
------------------------------------------ */
+/* CLOSE BUTTON */
 
-.close-seat-modal {
+#seat-modal .close-seat-modal {
+  position: absolute !important;
 
-  position: absolute;
+  right: 18px !important;
+  top: 14px !important;
 
-  right: 18px;
+  width: 42px !important;
+  height: 42px !important;
 
-  top: 14px;
+  border: none !important;
+  border-radius: 50% !important;
 
-  width: 40px;
+  background: #f1f4f7 !important;
 
-  height: 40px;
+  color: #173b63 !important;
 
-  border: none;
+  font-size: 27px !important;
 
-  border-radius: 50%;
-
-  background: #f3f5f8;
-
-  color: #18365d;
-
-  font-size: 28px;
-
-  cursor: pointer;
-
+  cursor: pointer !important;
 }
 
 
-/* -----------------------------------------
-   HEADER
------------------------------------------ */
+/* HEADER */
 
-.seat-modal-header {
+#seat-modal .seat-modal-header {
+  text-align: center !important;
 
-  text-align: center;
-
-  padding: 5px 40px 20px;
-
+  padding: 5px 45px 20px !important;
 }
 
 
-.seat-modal-label {
+#seat-modal .seat-modal-label {
+  margin: 0 0 8px !important;
 
-  font-size: 12px;
+  color: #b45b12 !important;
 
-  font-weight: 800;
+  font-size: 12px !important;
 
-  letter-spacing: 2px;
+  font-weight: 800 !important;
 
-  color: #b45b12;
-
-  margin-bottom: 7px;
-
+  letter-spacing: 2px !important;
 }
 
 
-.seat-modal-header h2 {
+#seat-modal .seat-modal-header h2 {
+  margin: 0 !important;
 
-  margin: 0;
+  color: #12365f !important;
 
-  color: #12365f;
-
-  font-size: 26px;
-
+  font-size: 28px !important;
 }
 
 
-.seat-modal-header p:last-child {
+#seat-modal .seat-modal-header p:last-child {
+  margin: 8px 0 0 !important;
 
-  color: #6d7d91;
+  color: #71839a !important;
 
-  margin-top: 8px;
-
+  font-size: 16px !important;
 }
 
 
-/* -----------------------------------------
-   LEGEND
------------------------------------------ */
+/* LEGEND */
 
-.seat-legend {
+#seat-modal .seat-legend {
+  display: flex !important;
 
-  display: flex;
+  justify-content: center !important;
 
-  justify-content: center;
+  align-items: center !important;
 
-  gap: 24px;
+  gap: 25px !important;
 
-  flex-wrap: wrap;
+  flex-wrap: wrap !important;
 
-  margin-bottom: 22px;
+  margin-bottom: 22px !important;
 
-  color: #53667d;
+  color: #53667d !important;
 
-  font-size: 13px;
-
+  font-size: 13px !important;
 }
 
 
-.seat-legend span {
+#seat-modal .seat-legend span {
+  display: flex !important;
 
-  display: flex;
+  align-items: center !important;
 
-  align-items: center;
-
-  gap: 7px;
-
+  gap: 7px !important;
 }
 
 
-.legend {
+#seat-modal .legend {
+  display: inline-block !important;
 
-  width: 16px;
+  width: 16px !important;
+  height: 16px !important;
 
-  height: 16px;
+  border-radius: 4px !important;
 
-  border-radius: 4px;
-
-  display: inline-block;
-
-  border: 1px solid #ccd5df;
-
+  border: 1px solid #ccd5df !important;
 }
 
 
-.legend.available {
-
-  background: white;
-
+#seat-modal .legend.available {
+  background: #ffffff !important;
 }
 
 
-.legend.selected {
+#seat-modal .legend.selected {
+  background: #b45b12 !important;
 
-  background: #b45b12;
-
-  border-color: #b45b12;
-
+  border-color: #b45b12 !important;
 }
 
 
-.legend.booked {
+#seat-modal .legend.booked {
+  background: #d7dde5 !important;
 
-  background: #d9dee5;
-
+  border-color: #d7dde5 !important;
 }
 
 
-/* -----------------------------------------
+/* =========================================
    BUS BODY
------------------------------------------ */
+   ========================================= */
 
-.bus-layout {
+#seat-modal .bus-layout {
+  width: min(410px, 100%) !important;
 
-  width: min(390px, 100%);
+  margin: 0 auto !important;
 
-  margin: auto;
+  padding: 18px 18px 25px !important;
 
-  border: 2px solid #dce3eb;
+  box-sizing: border-box !important;
 
-  border-radius: 28px;
+  border: 2px solid #dce4ed !important;
 
-  padding: 20px 16px 25px;
+  border-radius: 28px !important;
 
-  background: #f8fafc;
-
+  background: #f8fafc !important;
 }
 
 
-.driver {
+/* DRIVER */
 
-  width: 85px;
+#seat-modal .driver {
+  width: 90px !important;
 
-  margin-left: auto;
+  margin-left: auto !important;
 
-  margin-bottom: 20px;
+  margin-bottom: 20px !important;
 
-  padding: 8px;
+  padding: 9px !important;
 
-  text-align: center;
+  box-sizing: border-box !important;
 
-  font-size: 10px;
+  text-align: center !important;
 
-  font-weight: 800;
+  background: #e7edf4 !important;
 
-  letter-spacing: 1px;
+  border-radius: 9px !important;
 
-  color: #68788c;
+  color: #66788d !important;
 
-  background: #e8edf3;
+  font-size: 10px !important;
 
-  border-radius: 8px;
+  font-weight: 800 !important;
 
+  letter-spacing: 1px !important;
 }
 
 
-/* -----------------------------------------
+/* =========================================
+   IMPORTANT:
    SEAT GRID
------------------------------------------ */
+   ========================================= */
 
-.seat-grid {
+#seat-modal .seat-grid {
 
-  display: grid;
+  display: grid !important;
 
   grid-template-columns:
-    repeat(4, minmax(42px, 1fr));
+    repeat(4, minmax(48px, 1fr)) !important;
 
-  gap: 10px;
+  gap: 10px !important;
+
+  width: 100% !important;
+
+  min-height: 100px !important;
+
+  box-sizing: border-box !important;
+}
+
+
+/* =========================================
+   SEATS
+   ========================================= */
+
+#seat-modal .seat {
+
+  display: flex !important;
+
+  align-items: center !important;
+
+  justify-content: center !important;
+
+  width: 100% !important;
+
+  min-width: 0 !important;
+
+  height: 46px !important;
+
+  padding: 0 !important;
+
+  margin: 0 !important;
+
+  box-sizing: border-box !important;
+
+  border: 2px solid #d2dbe5 !important;
+
+  border-radius: 9px !important;
+
+  background: #ffffff !important;
+
+  color: #173b63 !important;
+
+  font-size: 14px !important;
+
+  font-weight: 800 !important;
+
+  line-height: 1 !important;
+
+  cursor: pointer !important;
+
+  opacity: 1 !important;
+
+  visibility: visible !important;
+}
+
+
+/* Create aisle */
+
+#seat-modal .seat:nth-child(4n + 2) {
+  margin-right: 22px !important;
+}
+
+
+/* HOVER */
+
+#seat-modal .seat:hover:not(:disabled) {
+
+  transform: translateY(-2px) !important;
+
+  border-color: #b45b12 !important;
+
+  background: #fff8f1 !important;
+}
+
+
+/* SELECTED */
+
+#seat-modal .seat.selected {
+
+  background: #b45b12 !important;
+
+  border-color: #b45b12 !important;
+
+  color: #ffffff !important;
+}
+
+
+/* BOOKED */
+
+#seat-modal .seat.booked {
+
+  background: #d8dee6 !important;
+
+  border-color: #d8dee6 !important;
+
+  color: #8793a1 !important;
+
+  cursor: not-allowed !important;
+
+  text-decoration: line-through !important;
+
+  opacity: 1 !important;
+}
+
+
+/* =========================================
+   BOOKING SUMMARY
+   ========================================= */
+
+#seat-modal .booking-summary {
+
+  display: flex !important;
+
+  justify-content: space-between !important;
+
+  align-items: center !important;
+
+  gap: 20px !important;
+
+  margin-top: 22px !important;
+
+  padding: 18px !important;
+
+  box-sizing: border-box !important;
+
+  border-radius: 14px !important;
+
+  background: #f4f7fa !important;
+}
+
+
+#seat-modal .booking-summary div {
+
+  display: flex !important;
+
+  flex-direction: column !important;
+
+  gap: 5px !important;
+}
+
+
+#seat-modal .booking-summary span {
+
+  color: #71839a !important;
+
+  font-size: 12px !important;
+}
+
+
+#seat-modal .booking-summary strong {
+
+  color: #12365f !important;
+
+  font-size: 18px !important;
+}
+
+
+/* =========================================
+   CONTINUE BUTTON
+   ========================================= */
+
+#seat-modal .continue-booking {
+
+  display: block !important;
+
+  width: 100% !important;
+
+  margin-top: 18px !important;
+
+  padding: 15px !important;
+
+  border: none !important;
+
+  border-radius: 12px !important;
+
+  background: #b45b12 !important;
+
+  color: #ffffff !important;
+
+  font-size: 16px !important;
+
+  font-weight: 800 !important;
+
+  cursor: pointer !important;
+}
+
+
+#seat-modal .continue-booking:disabled {
+
+  background: #cbd3dc !important;
+
+  color: #ffffff !important;
+
+  cursor: not-allowed !important;
+}
+
+
+/* =========================================
+   TABLET
+   ========================================= */
+
+@media (max-width: 768px) {
+
+  #seat-modal .seat-modal-box {
+    width: min(680px, 95vw) !important;
+  }
+
+  #seat-modal .seat-grid {
+    grid-template-columns:
+      repeat(4, minmax(45px, 1fr)) !important;
+  }
 
 }
 
 
-/*
-   Every row has:
-   2 seats | aisle | 2 seats
-*/
-
-.seat {
-
-  min-height: 42px;
-
-  border: 1px solid #ccd5df;
-
-  border-radius: 9px;
-
-  background: #ffffff;
-
-  color: #193b63;
-
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition:
-    transform 0.15s ease,
-    background 0.15s ease;
-
-}
-
-
-.seat:nth-child(4n + 2) {
-
-  margin-right: 18px;
-
-}
-
-
-.seat:hover:not(:disabled) {
-
-  transform: translateY(-2px);
-
-  border-color: #b45b12;
-
-}
-
-
-.seat.selected {
-
-  background: #b45b12;
-
-  color: white;
-
-  border-color: #b45b12;
-
-}
-
-
-.seat.booked {
-
-  background: #d9dee5;
-
-  color: #8a96a5;
-
-  cursor: not-allowed;
-
-  text-decoration: line-through;
-
-}
-
-
-/* -----------------------------------------
-   SUMMARY
------------------------------------------ */
-
-.booking-summary {
-
-  display: flex;
-
-  justify-content: space-between;
-
-  gap: 20px;
-
-  margin-top: 22px;
-
-  padding: 18px;
-
-  border-radius: 14px;
-
-  background: #f5f7fa;
-
-}
-
-
-.booking-summary div {
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 5px;
-
-}
-
-
-.booking-summary span {
-
-  font-size: 12px;
-
-  color: #708096;
-
-}
-
-
-.booking-summary strong {
-
-  color: #12365f;
-
-  font-size: 18px;
-
-}
-
-
-/* -----------------------------------------
-   CONTINUE
------------------------------------------ */
-
-.continue-booking {
-
-  width: 100%;
-
-  margin-top: 18px;
-
-  border: none;
-
-  border-radius: 12px;
-
-  padding: 15px;
-
-  background: #b45b12;
-
-  color: white;
-
-  font-size: 16px;
-
-  font-weight: 800;
-
-  cursor: pointer;
-
-}
-
-
-.continue-booking:disabled {
-
-  background: #cbd2da;
-
-  cursor: not-allowed;
-
-}
-
-
-/* -----------------------------------------
+/* =========================================
    MOBILE
------------------------------------------ */
+   ========================================= */
 
 @media (max-width: 600px) {
 
-  .seat-overlay {
+  #seat-modal .seat-overlay {
+    padding: 10px !important;
 
-    padding: 10px;
-
-    align-items: flex-start;
-
+    align-items: flex-start !important;
   }
 
 
-  .seat-modal-box {
+  #seat-modal .seat-modal-box {
 
-    margin-top: 15px;
+    width: 100% !important;
 
-    padding: 20px 14px;
+    margin-top: 10px !important;
 
-    border-radius: 20px;
+    padding: 20px 14px !important;
 
-    max-height: 94vh;
+    border-radius: 20px !important;
 
+    max-height: 95vh !important;
   }
 
 
-  .seat-modal-header {
+  #seat-modal .seat-modal-header {
 
-    padding-left: 25px;
+    padding-left: 30px !important;
 
-    padding-right: 25px;
-
+    padding-right: 30px !important;
   }
 
 
-  .seat-modal-header h2 {
+  #seat-modal .seat-modal-header h2 {
 
-    font-size: 21px;
-
+    font-size: 21px !important;
   }
 
 
-  .seat-grid {
+  #seat-modal .seat-grid {
 
-    gap: 7px;
+    grid-template-columns:
+      repeat(4, minmax(42px, 1fr)) !important;
 
+    gap: 7px !important;
   }
 
 
-  .seat {
+  #seat-modal .seat {
 
-    min-height: 40px;
+    height: 42px !important;
 
-    font-size: 13px;
-
+    font-size: 13px !important;
   }
 
 
-  .seat:nth-child(4n + 2) {
+  #seat-modal .seat:nth-child(4n + 2) {
 
-    margin-right: 10px;
-
+    margin-right: 10px !important;
   }
 
 
-  .booking-summary {
+  #seat-modal .booking-summary {
 
-    padding: 14px;
-
+    padding: 14px !important;
   }
 
 }
 
 
-/* -----------------------------------------
-   SMALL PHONES
------------------------------------------ */
+/* =========================================
+   SMALL PHONE
+   ========================================= */
 
 @media (max-width: 380px) {
 
-  .seat {
+  #seat-modal .seat-grid {
 
-    min-height: 36px;
-
-    font-size: 12px;
-
+    gap: 5px !important;
   }
 
 
-  .seat-grid {
+  #seat-modal .seat {
 
-    gap: 5px;
+    height: 38px !important;
 
+    font-size: 12px !important;
   }
 
 }
 
 `;
-
 
 document.head.appendChild(seatStyles);
