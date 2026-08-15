@@ -1,554 +1,390 @@
-const seatStyles = document.createElement("style");
+const dateInput = document.getElementById("date");
+const searchForm = document.getElementById("searchForm");
+const fromInput = document.getElementById("from");
+const toInput = document.getElementById("to");
+const resultsSection = document.getElementById("bus-results");
+const resultsList = document.getElementById("bus-results-list");
+const resultsSummary = document.getElementById("results-summary");
 
-seatStyles.textContent = `
+/* =========================================================
+   JANBAHON BUS DATA
+   Total seats are deliberately different for every service:
+   32 / 40 / 44 / 36 / 48.
+   ========================================================= */
+const buses = [
+  {
+    id: "astc-mankachar-express",
+    operator: "ASTC",
+    name: "Mankachar Express",
+    type: "AC Seater",
+    price: 480,
+    from: "Mankachar",
+    to: "Guwahati",
+    departure: "05:30 AM",
+    arrival: "01:00 PM",
+    duration: "7h 30m",
+    seats: 32
+  },
+  {
+    id: "janbahon-south-assam",
+    operator: "JANBAHON",
+    name: "South Assam Travels",
+    type: "Non-AC Seater",
+    price: 390,
+    from: "Mankachar",
+    to: "Guwahati",
+    departure: "07:30 AM",
+    arrival: "03:30 PM",
+    duration: "8h",
+    seats: 40
+  },
+  {
+    id: "assam-roadways-brahmaputra",
+    operator: "Assam Roadways",
+    name: "Brahmaputra Superfast",
+    type: "AC Seater",
+    price: 520,
+    from: "Mankachar",
+    to: "Guwahati",
+    departure: "06:15 AM",
+    arrival: "01:45 PM",
+    duration: "7h 30m",
+    seats: 44
+  },
+  {
+    id: "janbahon-barak-valley",
+    operator: "JANBAHON",
+    name: "Barak Valley Express",
+    type: "Non-AC Seater",
+    price: 360,
+    from: "Mankachar",
+    to: "Guwahati",
+    departure: "08:00 AM",
+    arrival: "04:30 PM",
+    duration: "8h 30m",
+    seats: 36
+  },
+  {
+    id: "northeast-night-rider",
+    operator: "Northeast Travels",
+    name: "Assam Night Rider",
+    type: "AC Seater",
+    price: 550,
+    from: "Mankachar",
+    to: "Guwahati",
+    departure: "09:00 PM",
+    arrival: "05:30 AM",
+    duration: "8h 30m",
+    seats: 48
+  }
+];
 
-/* =========================================
-   JANBAHON SEAT SELECTION
-   ========================================= */
-
-#seat-modal {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 99999 !important;
+/* Use today's local date as the minimum selectable journey date. */
+function getLocalISODate() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
 }
 
-
-/* OVERLAY */
-
-#seat-modal .seat-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-
-  padding: 20px !important;
-
-  background: rgba(12, 31, 55, 0.72) !important;
-
-  overflow-y: auto !important;
+if (dateInput) {
+  dateInput.min = getLocalISODate();
+  if (!dateInput.value) dateInput.value = dateInput.min;
 }
 
-
-/* MODAL */
-
-#seat-modal .seat-modal-box {
-  position: relative !important;
-
-  width: min(720px, 100%) !important;
-  max-height: 92vh !important;
-
-  overflow-y: auto !important;
-
-  background: #ffffff !important;
-
-  border-radius: 24px !important;
-
-  padding: 30px !important;
-
-  box-shadow:
-    0 25px 70px rgba(0, 0, 0, 0.28) !important;
-
-  box-sizing: border-box !important;
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function formatDate(value) {
+  if (!value) return "";
+  const date = new Date(`${value}T00:00:00`);
+  return date.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
 }
 
-
-/* CLOSE BUTTON */
-
-#seat-modal .close-seat-modal {
-  position: absolute !important;
-
-  right: 18px !important;
-  top: 14px !important;
-
-  width: 42px !important;
-  height: 42px !important;
-
-  border: none !important;
-  border-radius: 50% !important;
-
-  background: #f1f4f7 !important;
-
-  color: #173b63 !important;
-
-  font-size: 27px !important;
-
-  cursor: pointer !important;
+function escapeHTML(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
-
-/* HEADER */
-
-#seat-modal .seat-modal-header {
-  text-align: center !important;
-
-  padding: 5px 45px 20px !important;
-}
-
-
-#seat-modal .seat-modal-label {
-  margin: 0 0 8px !important;
-
-  color: #b45b12 !important;
-
-  font-size: 12px !important;
-
-  font-weight: 800 !important;
-
-  letter-spacing: 2px !important;
-}
-
-
-#seat-modal .seat-modal-header h2 {
-  margin: 0 !important;
-
-  color: #12365f !important;
-
-  font-size: 28px !important;
-}
-
-
-#seat-modal .seat-modal-header p:last-child {
-  margin: 8px 0 0 !important;
-
-  color: #71839a !important;
-
-  font-size: 16px !important;
-}
-
-
-/* LEGEND */
-
-#seat-modal .seat-legend {
-  display: flex !important;
-
-  justify-content: center !important;
-
-  align-items: center !important;
-
-  gap: 25px !important;
-
-  flex-wrap: wrap !important;
-
-  margin-bottom: 22px !important;
-
-  color: #53667d !important;
-
-  font-size: 13px !important;
-}
-
-
-#seat-modal .seat-legend span {
-  display: flex !important;
-
-  align-items: center !important;
-
-  gap: 7px !important;
-}
-
-
-#seat-modal .legend {
-  display: inline-block !important;
-
-  width: 16px !important;
-  height: 16px !important;
-
-  border-radius: 4px !important;
-
-  border: 1px solid #ccd5df !important;
-}
-
-
-#seat-modal .legend.available {
-  background: #ffffff !important;
-}
-
-
-#seat-modal .legend.selected {
-  background: #b45b12 !important;
-
-  border-color: #b45b12 !important;
-}
-
-
-#seat-modal .legend.booked {
-  background: #d7dde5 !important;
-
-  border-color: #d7dde5 !important;
-}
-
-
-/* =========================================
-   BUS BODY
-   ========================================= */
-
-#seat-modal .bus-layout {
-  width: min(410px, 100%) !important;
-
-  margin: 0 auto !important;
-
-  padding: 18px 18px 25px !important;
-
-  box-sizing: border-box !important;
-
-  border: 2px solid #dce4ed !important;
-
-  border-radius: 28px !important;
-
-  background: #f8fafc !important;
-}
-
-
-/* DRIVER */
-
-#seat-modal .driver {
-  width: 90px !important;
-
-  margin-left: auto !important;
-
-  margin-bottom: 20px !important;
-
-  padding: 9px !important;
-
-  box-sizing: border-box !important;
-
-  text-align: center !important;
-
-  background: #e7edf4 !important;
-
-  border-radius: 9px !important;
-
-  color: #66788d !important;
-
-  font-size: 10px !important;
-
-  font-weight: 800 !important;
-
-  letter-spacing: 1px !important;
-}
-
-
-/* =========================================
-   IMPORTANT:
-   SEAT GRID
-   ========================================= */
-
-#seat-modal .seat-grid {
-
-  display: grid !important;
-
-  grid-template-columns:
-    repeat(4, minmax(48px, 1fr)) !important;
-
-  gap: 10px !important;
-
-  width: 100% !important;
-
-  min-height: 100px !important;
-
-  box-sizing: border-box !important;
-}
-
-
-/* =========================================
-   SEATS
-   ========================================= */
-
-#seat-modal .seat {
-
-  display: flex !important;
-
-  align-items: center !important;
-
-  justify-content: center !important;
-
-  width: 100% !important;
-
-  min-width: 0 !important;
-
-  height: 46px !important;
-
-  padding: 0 !important;
-
-  margin: 0 !important;
-
-  box-sizing: border-box !important;
-
-  border: 2px solid #d2dbe5 !important;
-
-  border-radius: 9px !important;
-
-  background: #ffffff !important;
-
-  color: #173b63 !important;
-
-  font-size: 14px !important;
-
-  font-weight: 800 !important;
-
-  line-height: 1 !important;
-
-  cursor: pointer !important;
-
-  opacity: 1 !important;
-
-  visibility: visible !important;
-}
-
-
-/* Create aisle */
-
-#seat-modal .seat:nth-child(4n + 2) {
-  margin-right: 22px !important;
-}
-
-
-/* HOVER */
-
-#seat-modal .seat:hover:not(:disabled) {
-
-  transform: translateY(-2px) !important;
-
-  border-color: #b45b12 !important;
-
-  background: #fff8f1 !important;
-}
-
-
-/* SELECTED */
-
-#seat-modal .seat.selected {
-
-  background: #b45b12 !important;
-
-  border-color: #b45b12 !important;
-
-  color: #ffffff !important;
-}
-
-
-/* BOOKED */
-
-#seat-modal .seat.booked {
-
-  background: #d8dee6 !important;
-
-  border-color: #d8dee6 !important;
-
-  color: #8793a1 !important;
-
-  cursor: not-allowed !important;
-
-  text-decoration: line-through !important;
-
-  opacity: 1 !important;
-}
-
-
-/* =========================================
-   BOOKING SUMMARY
-   ========================================= */
-
-#seat-modal .booking-summary {
-
-  display: flex !important;
-
-  justify-content: space-between !important;
-
-  align-items: center !important;
-
-  gap: 20px !important;
-
-  margin-top: 22px !important;
-
-  padding: 18px !important;
-
-  box-sizing: border-box !important;
-
-  border-radius: 14px !important;
-
-  background: #f4f7fa !important;
-}
-
-
-#seat-modal .booking-summary div {
-
-  display: flex !important;
-
-  flex-direction: column !important;
-
-  gap: 5px !important;
-}
-
-
-#seat-modal .booking-summary span {
-
-  color: #71839a !important;
-
-  font-size: 12px !important;
-}
-
-
-#seat-modal .booking-summary strong {
-
-  color: #12365f !important;
-
-  font-size: 18px !important;
-}
-
-
-/* =========================================
-   CONTINUE BUTTON
-   ========================================= */
-
-#seat-modal .continue-booking {
-
-  display: block !important;
-
-  width: 100% !important;
-
-  margin-top: 18px !important;
-
-  padding: 15px !important;
-
-  border: none !important;
-
-  border-radius: 12px !important;
-
-  background: #b45b12 !important;
-
-  color: #ffffff !important;
-
-  font-size: 16px !important;
-
-  font-weight: 800 !important;
-
-  cursor: pointer !important;
-}
-
-
-#seat-modal .continue-booking:disabled {
-
-  background: #cbd3dc !important;
-
-  color: #ffffff !important;
-
-  cursor: not-allowed !important;
-}
-
-
-/* =========================================
-   TABLET
-   ========================================= */
-
-@media (max-width: 768px) {
-
-  #seat-modal .seat-modal-box {
-    width: min(680px, 95vw) !important;
+/* =========================================================
+   SEARCH
+   ========================================================= */
+function searchBuses() {
+  const from = fromInput.value;
+  const to = toInput.value;
+  const date = dateInput.value;
+
+  if (!from || !to || !date) return;
+
+  if (from === to) {
+    alert("Origin and destination cannot be the same.");
+    return;
   }
 
-  #seat-modal .seat-grid {
-    grid-template-columns:
-      repeat(4, minmax(45px, 1fr)) !important;
-  }
+  const matches = buses.filter(bus => bus.from === from && bus.to === to);
 
+  renderResults(matches, from, to, date);
+
+  resultsSection.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
 }
 
+function renderResults(matches, from, to, date) {
+  resultsList.innerHTML = "";
 
-/* =========================================
-   MOBILE
-   ========================================= */
-
-@media (max-width: 600px) {
-
-  #seat-modal .seat-overlay {
-    padding: 10px !important;
-
-    align-items: flex-start !important;
+  if (!matches.length) {
+    resultsSummary.textContent = `${from} → ${to} • ${formatDate(date)} • No buses found`;
+    resultsList.innerHTML = `
+      <div class="empty-results">
+        <div class="empty-results-icon">⌕</div>
+        <h3>No buses found for this route</h3>
+        <p>Try another route or check the journey date.</p>
+      </div>
+    `;
+    return;
   }
 
+  resultsSummary.textContent = `${from} → ${to} • ${formatDate(date)} • ${matches.length} buses found`;
 
-  #seat-modal .seat-modal-box {
+  matches.forEach(bus => {
+    const card = document.createElement("article");
+    card.className = "bus-card";
+    card.innerHTML = `
+      <div class="bus-operator-block">
+        <div class="bus-operator">${escapeHTML(bus.operator)}</div>
+      </div>
 
-    width: 100% !important;
+      <div class="bus-info">
+        <h3>${escapeHTML(bus.name)}</h3>
+        <p class="bus-type">${escapeHTML(bus.type)}</p>
+        <p class="bus-price">₹${bus.price.toLocaleString("en-IN")} <span>per seat</span></p>
+      </div>
 
-    margin-top: 10px !important;
+      <div class="bus-journey-line">
+        <div class="journey-point">
+          <strong>${escapeHTML(bus.from)}</strong>
+          <span>${escapeHTML(bus.departure)}</span>
+        </div>
 
-    padding: 20px 14px !important;
+        <div class="journey-track" aria-hidden="true">
+          <span class="track-dot"></span>
+          <span class="track-line"></span>
+          <span class="bus-icon">▣</span>
+          <span class="track-line"></span>
+          <span class="track-dot"></span>
+          <small>${escapeHTML(bus.duration)}</small>
+        </div>
 
-    border-radius: 20px !important;
+        <div class="journey-point journey-arrival">
+          <strong>${escapeHTML(bus.to)}</strong>
+          <span>${escapeHTML(bus.arrival)}</span>
+        </div>
+      </div>
 
-    max-height: 95vh !important;
-  }
+      <div class="bus-action">
+        <span class="bus-seats">${bus.seats} seats</span>
+        <button class="book-seat" type="button">Book Seat</button>
+      </div>
+    `;
 
+    card.querySelector(".book-seat").addEventListener("click", () => openSeatModal(bus));
+    resultsList.appendChild(card);
+  });
 
-  #seat-modal .seat-modal-header {
-
-    padding-left: 30px !important;
-
-    padding-right: 30px !important;
-  }
-
-
-  #seat-modal .seat-modal-header h2 {
-
-    font-size: 21px !important;
-  }
-
-
-  #seat-modal .seat-grid {
-
-    grid-template-columns:
-      repeat(4, minmax(42px, 1fr)) !important;
-
-    gap: 7px !important;
-  }
-
-
-  #seat-modal .seat {
-
-    height: 42px !important;
-
-    font-size: 13px !important;
-  }
-
-
-  #seat-modal .seat:nth-child(4n + 2) {
-
-    margin-right: 10px !important;
-  }
-
-
-  #seat-modal .booking-summary {
-
-    padding: 14px !important;
-  }
-
+  const note = document.createElement("p");
+  note.className = "bus-results-note";
+  note.textContent = "Note: Bus timings are subject to change. Please arrive at the boarding point at least 30 minutes before departure.";
+  resultsList.appendChild(note);
 }
 
+searchForm?.addEventListener("submit", event => {
+  event.preventDefault();
+  searchBuses();
+});
 
-/* =========================================
-   SMALL PHONE
-   ========================================= */
+/* =========================================================
+   SWAP
+   ========================================================= */
+document.getElementById("swap")?.addEventListener("click", () => {
+  const currentFrom = fromInput.value;
+  fromInput.value = toInput.value;
+  toInput.value = currentFrom;
+});
 
-@media (max-width: 380px) {
+/* =========================================================
+   POPULAR ROUTES
+   ========================================================= */
+document.querySelectorAll(".route-card").forEach(card => {
+  card.addEventListener("click", () => {
+    fromInput.value = card.dataset.from || "";
+    toInput.value = card.dataset.to || "";
+    if (!dateInput.value) dateInput.value = dateInput.min;
+    searchBuses();
+  });
+});
 
-  #seat-modal .seat-grid {
+/* =========================================================
+   SEAT MODAL
+   2 + 1 bus layout similar to the provided reference.
+   ========================================================= */
+let activeBus = null;
+let selectedSeat = null;
+let seatModal = null;
 
-    gap: 5px !important;
-  }
+function createSeatModal() {
+  if (document.getElementById("seat-modal")) return;
 
+  seatModal = document.createElement("div");
+  seatModal.id = "seat-modal";
+  seatModal.innerHTML = `
+    <div class="seat-overlay" role="dialog" aria-modal="true" aria-label="Seat selection">
+      <div class="seat-modal-box">
+        <button class="close-seat-modal" type="button" aria-label="Close">×</button>
 
-  #seat-modal .seat {
+        <div class="seat-modal-header">
+          <p class="seat-modal-label">SELECT YOUR SEAT</p>
+          <h2 id="seat-bus-name"></h2>
+          <p id="seat-bus-meta"></p>
+        </div>
 
-    height: 38px !important;
+        <div class="seat-legend">
+          <span><i class="legend available"></i> Available</span>
+          <span><i class="legend selected"></i> Selected</span>
+          <span><i class="legend booked"></i> Booked</span>
+        </div>
 
-    font-size: 12px !important;
-  }
+        <div class="bus-layout">
+          <div class="driver">DRIVER</div>
+          <div class="seat-grid" id="modal-seat-grid"></div>
+        </div>
 
+        <div class="booking-summary">
+          <div>
+            <span>Selected Seat</span>
+            <strong id="modal-selected-seat">None</strong>
+          </div>
+          <div>
+            <span>Total Fare</span>
+            <strong id="modal-total-fare">₹0</strong>
+          </div>
+        </div>
+
+        <button class="continue-booking" id="continue-booking" type="button" disabled>
+          Continue
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(seatModal);
+
+  seatModal.querySelector(".close-seat-modal").addEventListener("click", closeSeatModal);
+  seatModal.querySelector(".seat-overlay").addEventListener("click", event => {
+    if (event.target.classList.contains("seat-overlay")) closeSeatModal();
+  });
+  seatModal.querySelector("#continue-booking").addEventListener("click", () => {
+    if (!activeBus || !selectedSeat) return;
+    alert(`Seat ${selectedSeat} selected on ${activeBus.name}.\n\nNext step: passenger details and payment.`);
+  });
 }
 
-`;
+function getBookedSeats(bus) {
+  /* Deterministic pattern: every bus gets its own occupied seats. */
+  const count = Math.max(3, Math.floor(bus.seats * 0.18));
+  const booked = new Set();
+  let seed = bus.seats + bus.price;
 
-document.head.appendChild(seatStyles);
+  while (booked.size < count) {
+    seed = (seed * 9301 + 49297) % 233280;
+    const seat = Math.floor((seed / 233280) * bus.seats) + 1;
+    booked.add(seat);
+  }
+
+  return booked;
+}
+
+function openSeatModal(bus) {
+  createSeatModal();
+  activeBus = bus;
+  selectedSeat = null;
+
+  document.getElementById("seat-bus-name").textContent = bus.name;
+  document.getElementById("seat-bus-meta").textContent = `${bus.type} • ₹${bus.price.toLocaleString("en-IN")} per seat • ${bus.seats} total seats`;
+  document.getElementById("modal-selected-seat").textContent = "None";
+  document.getElementById("modal-total-fare").textContent = "₹0";
+  document.getElementById("continue-booking").disabled = true;
+
+  renderSeatGrid(bus);
+
+  seatModal.classList.add("open");
+  document.body.classList.add("modal-open");
+}
+
+function closeSeatModal() {
+  if (!seatModal) return;
+  seatModal.classList.remove("open");
+  document.body.classList.remove("modal-open");
+}
+
+function renderSeatGrid(bus) {
+  const grid = document.getElementById("modal-seat-grid");
+  grid.innerHTML = "";
+
+  const bookedSeats = getBookedSeats(bus);
+
+  for (let seatNumber = 1; seatNumber <= bus.seats; seatNumber++) {
+    const seat = document.createElement("button");
+    seat.type = "button";
+    seat.className = "seat";
+    seat.textContent = seatNumber;
+    seat.setAttribute("aria-label", `Seat ${seatNumber}`);
+
+    /* 2 + 1 arrangement: two seats on the left, aisle, one on right. */
+    const position = (seatNumber - 1) % 3;
+    if (position === 0) seat.classList.add("left-seat");
+    if (position === 1) seat.classList.add("left-seat");
+    if (position === 2) seat.classList.add("right-seat");
+
+    if (bookedSeats.has(seatNumber)) {
+      seat.classList.add("booked");
+      seat.disabled = true;
+    } else {
+      seat.addEventListener("click", () => selectSeat(seatNumber));
+    }
+
+    grid.appendChild(seat);
+  }
+}
+
+function selectSeat(seatNumber) {
+  selectedSeat = seatNumber;
+
+  document.querySelectorAll("#modal-seat-grid .seat.selected").forEach(seat => {
+    seat.classList.remove("selected");
+  });
+
+  const selectedButton = [...document.querySelectorAll("#modal-seat-grid .seat")]
+    .find(button => Number(button.textContent) === seatNumber);
+
+  selectedButton?.classList.add("selected");
+
+  document.getElementById("modal-selected-seat").textContent = `Seat ${seatNumber}`;
+  document.getElementById("modal-total-fare").textContent = `₹${activeBus.price.toLocaleString("en-IN")}`;
+  document.getElementById("continue-booking").disabled = false;
+}
+
+/* Escape key closes the seat modal. */
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && seatModal?.classList.contains("open")) {
+    closeSeatModal();
+  }
+});
