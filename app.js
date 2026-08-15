@@ -250,23 +250,199 @@ document.getElementById("searchForm").addEventListener("submit", event => {
   });
 
 
-  /* =========================
-     BOOK SEAT BUTTONS
-     ========================= */
+  /* =========================================================
+   SEAT SELECTION
+   ========================================================= */
 
-  document.querySelectorAll(".book-seat").forEach(button => {
+document.querySelectorAll(".book-seat").forEach(button => {
 
-    button.addEventListener("click", () => {
+  button.addEventListener("click", () => {
 
-      const busName = button.dataset.bus;
-      const seats = button.dataset.seats;
+    const busName = button.dataset.bus;
 
-      alert(
-        `${busName}\n\n${seats} seats are currently available.\n\nSeat selection and payment will be connected in the next stage.`
-      );
+    const bus = buses.find(
+      item => item.name === busName
+    );
 
-    });
+    if (!bus) return;
+
+
+    /* Show seat section */
+
+    const seatSection =
+      document.getElementById("seat-selection");
+
+    seatSection.classList.add("active");
+
+
+    /* Bus information */
+
+    document.getElementById("selected-bus-info").textContent =
+      `${bus.name} • ${bus.type} • ${bus.seats} seats`;
+
+    document.getElementById("seat-route").textContent =
+      `${bus.from} → ${bus.to}`;
+
+
+    /* Create seats */
+
+    createSeatLayout(bus);
+
+
+    /* Scroll */
+
+    setTimeout(() => {
+
+      seatSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+
+    }, 100);
 
   });
 
 });
+
+
+/* =========================================================
+   CREATE SEAT LAYOUT
+   ========================================================= */
+
+function createSeatLayout(bus) {
+
+  const seatGrid =
+    document.getElementById("seat-grid");
+
+  seatGrid.innerHTML = "";
+
+
+  const totalSeats = bus.seats;
+
+
+  /*
+     We create seats in rows.
+
+     Layout:
+
+     A B   C D
+
+     Aisle between B and C.
+  */
+
+  let seatNumber = 1;
+
+
+  while (seatNumber <= totalSeats) {
+
+    for (let position = 1; position <= 5; position++) {
+
+      /* Middle position = aisle */
+
+      if (position === 3) {
+
+        const aisle =
+          document.createElement("div");
+
+        aisle.className = "seat aisle";
+
+        seatGrid.appendChild(aisle);
+
+        continue;
+      }
+
+
+      /* Stop after capacity */
+
+      if (seatNumber > totalSeats) {
+        break;
+      }
+
+
+      const seat =
+        document.createElement("button");
+
+      seat.type = "button";
+
+      seat.className = "seat available";
+
+      seat.textContent =
+        String(seatNumber).padStart(2, "0");
+
+      seat.dataset.seat =
+        seatNumber;
+
+
+      /* Some demonstration occupied seats */
+
+      if (
+        seatNumber === 3 ||
+        seatNumber === 8 ||
+        seatNumber === 15
+      ) {
+
+        seat.classList.remove("available");
+
+        seat.classList.add("occupied");
+
+        seat.disabled = true;
+
+      }
+
+
+      /* Seat selection */
+
+      seat.addEventListener("click", () => {
+
+        /* Remove previous selection */
+
+        document
+          .querySelectorAll(".seat.selected")
+          .forEach(selected => {
+
+            selected.classList.remove("selected");
+
+            selected.classList.add("available");
+
+          });
+
+
+        /* Select this seat */
+
+        seat.classList.remove("available");
+
+        seat.classList.add("selected");
+
+
+        /* Update summary */
+
+        document.getElementById(
+          "selected-seat"
+        ).textContent =
+          `Seat ${seat.dataset.seat}`;
+
+
+        document.getElementById(
+          "seat-fare"
+        ).textContent =
+          `₹${bus.price}`;
+
+
+        /* Enable continue */
+
+        document.getElementById(
+          "continue-seat"
+        ).disabled = false;
+
+      });
+
+
+      seatGrid.appendChild(seat);
+
+      seatNumber++;
+
+    }
+
+  }
+
+}
