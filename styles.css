@@ -827,3 +827,396 @@ footer span {
     font-size: 33px;
   }
 }
+/* =========================================================
+   JANBAHON — SEAT SELECTION
+   ========================================================= */
+
+.seat-selection {
+  width: min(100% - 40px, 1180px);
+  margin: 0 auto;
+  padding: 80px 0 100px;
+
+  display: none;
+}
+
+.seat-selection.active {
+  display: block;
+}
+
+
+/* Main layout */
+
+.seat-layout-container {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: minmax(320px, 620px) minmax(280px, 360px);
+
+  justify-content: center;
+
+  gap: 40px;
+  align-items: start;
+}
+
+
+/* =========================================================
+   BUS SEAT AREA
+   ========================================================= */
+
+.seat-layout {
+  width: 100%;
+
+  padding: 28px;
+
+  background: #f7f8fa;
+
+  border: 1px solid #e2e6eb;
+  border-radius: 28px;
+
+  box-shadow: 0 12px 35px rgba(8, 43, 92, 0.08);
+}
+
+
+/* Driver */
+
+.driver-area {
+  width: 100%;
+  max-width: 180px;
+
+  margin: 0 auto 30px;
+
+  padding: 13px;
+
+  text-align: center;
+
+  border: 1px solid #d7dce3;
+  border-radius: 12px;
+
+  background: white;
+
+  color: #6d7788;
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+
+/* Seat grid */
+
+.seat-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(45px, 1fr))
+    40px
+    repeat(2, minmax(45px, 1fr));
+
+  gap: 12px;
+
+  max-width: 390px;
+
+  margin: 0 auto;
+}
+
+
+/* Seat */
+
+.seat {
+  min-width: 0;
+  aspect-ratio: 1 / 1;
+
+  border: 1px solid #d7dde5;
+  border-radius: 10px;
+
+  background: white;
+
+  color: #193454;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  transition: 0.15s ease;
+}
+
+
+/* Aisle */
+
+.seat.aisle {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+
+/* Available */
+
+.seat.available:hover {
+  border-color: var(--orange);
+  background: #fff4eb;
+
+  transform: translateY(-2px);
+}
+
+
+/* Selected */
+
+.seat.selected {
+  background: var(--orange);
+  border-color: var(--orange);
+
+  color: white;
+
+  box-shadow: 0 5px 15px rgba(244, 123, 32, 0.25);
+}
+
+
+/* Occupied */
+
+.seat.occupied {
+  background: #dfe3e8;
+  border-color: #dfe3e8;
+
+  color: #8a929e;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   SUMMARY
+   ========================================================= */
+
+.seat-summary {
+  padding: 26px;
+
+  background: white;
+
+  border: 1px solid var(--border);
+  border-radius: 20px;
+
+  box-shadow: 0 8px 28px rgba(8, 43, 92, 0.07);
+}
+
+.seat-summary h3 {
+  margin: 0 0 10px;
+
+  color: var(--navy);
+
+  font-size: 20px;
+}
+
+#seat-route {
+  color: var(--muted);
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.summary-divider {
+  height: 1px;
+
+  margin: 22px 0;
+
+  background: var(--border);
+}
+
+
+/* Legend */
+
+.seat-legend {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+
+  color: #586579;
+
+  font-size: 13px;
+}
+
+.seat-legend div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legend-seat {
+  width: 18px;
+  height: 18px;
+
+  display: inline-block;
+
+  border-radius: 5px;
+
+  border: 1px solid #d7dde5;
+
+  background: white;
+}
+
+.legend-seat.selected {
+  background: var(--orange);
+  border-color: var(--orange);
+}
+
+.legend-seat.occupied {
+  background: #dfe3e8;
+  border-color: #dfe3e8;
+}
+
+
+/* Selected seat */
+
+.selected-seat-box {
+  margin-top: 25px;
+  padding: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: var(--soft);
+
+  border-radius: 12px;
+}
+
+.selected-seat-box span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.selected-seat-box strong {
+  color: var(--navy);
+}
+
+
+/* Fare */
+
+.seat-fare {
+  margin-top: 16px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.seat-fare span {
+  color: var(--muted);
+}
+
+.seat-fare strong {
+  color: var(--navy);
+  font-size: 23px;
+}
+
+
+/* Continue */
+
+.continue-seat {
+  width: 100%;
+
+  min-height: 50px;
+
+  margin-top: 24px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: var(--orange);
+  color: white;
+
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.continue-seat:hover:not(:disabled) {
+  background: var(--orange-dark);
+}
+
+.continue-seat:disabled {
+  background: #d9dde3;
+  color: #89919c;
+
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+  .seat-layout-container {
+    grid-template-columns: 1fr;
+
+    max-width: 620px;
+
+    margin: 0 auto;
+  }
+
+  .seat-summary {
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .seat-selection {
+    width: calc(100% - 28px);
+
+    padding: 55px 0 70px;
+  }
+
+  .seat-layout {
+    padding: 20px 12px;
+
+    border-radius: 20px;
+  }
+
+  .seat-grid {
+    grid-template-columns:
+      repeat(2, minmax(36px, 1fr))
+      25px
+      repeat(2, minmax(36px, 1fr));
+
+    gap: 8px;
+
+    max-width: 330px;
+  }
+
+  .seat {
+    font-size: 11px;
+
+    border-radius: 8px;
+  }
+
+  .seat-summary {
+    padding: 20px;
+  }
+}
+
+
+/* =========================================================
+   SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .seat-grid {
+    grid-template-columns:
+      repeat(2, minmax(31px, 1fr))
+      20px
+      repeat(2, minmax(31px, 1fr));
+
+    gap: 6px;
+  }
+
+  .seat {
+    font-size: 10px;
+  }
+}
