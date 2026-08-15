@@ -144,14 +144,292 @@ document.querySelectorAll(".route-card").forEach(card => {
 });
 
 /* =========================================================
+   MODAL STYLES
+   Passenger and seat styles are injected here so the flow
+   works without changing the existing page structure.
+   ========================================================= */
+function injectBookingStyles() {
+  if (document.getElementById("janbahon-booking-styles")) return;
+
+  const style = document.createElement("style");
+  style.id = "janbahon-booking-styles";
+  style.textContent = `
+    body.modal-open { overflow: hidden; }
+
+    .seat-overlay,
+    .passenger-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 3000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(6, 31, 67, 0.72);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+      overflow-y: auto;
+    }
+
+    #seat-modal.open .seat-overlay,
+    #passenger-modal.open .passenger-overlay {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .seat-modal-box,
+    .passenger-modal-box {
+      position: relative;
+      width: min(100%, 760px);
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      padding: 34px;
+      background: #fff;
+      border-radius: 26px;
+      box-shadow: 0 25px 80px rgba(0,0,0,.25);
+      transform: translateY(12px);
+      transition: transform .2s ease;
+    }
+
+    #seat-modal.open .seat-modal-box,
+    #passenger-modal.open .passenger-modal-box {
+      transform: translateY(0);
+    }
+
+    .close-seat-modal,
+    .close-passenger-modal {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 50%;
+      background: #f0f3f7;
+      color: #082b5c;
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .close-seat-modal:hover,
+    .close-passenger-modal:hover { background: #e5eaf0; }
+
+    .seat-modal-header,
+    .passenger-header { text-align: center; padding: 0 40px; }
+    .seat-modal-label,
+    .passenger-step {
+      margin: 0 0 8px;
+      color: #f47b20;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 2.5px;
+    }
+    .seat-modal-header h2,
+    .passenger-header h2 {
+      margin: 0;
+      color: #082b5c;
+      font-size: clamp(25px, 5vw, 34px);
+    }
+    .seat-modal-header p:last-child,
+    .passenger-header > p:last-child { color: #6d7788; margin: 8px 0 0; }
+
+    .seat-legend {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin: 28px 0 18px;
+      color: #6d7788;
+      font-size: 13px;
+    }
+    .seat-legend span { display: inline-flex; align-items: center; gap: 7px; }
+    .legend { width: 16px; height: 16px; border-radius: 5px; border: 1px solid #d9e0e8; background: #fff; display: inline-block; }
+    .legend.selected { background: #16824b; border-color: #16824b; }
+    .legend.booked { background: #d9dee6; border-color: #d9dee6; }
+
+    .bus-layout {
+      width: min(100%, 420px);
+      margin: 0 auto;
+      padding: 18px;
+      border: 1px solid #dce2e9;
+      border-radius: 24px;
+      background: #f8fafc;
+    }
+    .driver {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 18px;
+      text-align: right;
+      border-radius: 10px;
+      background: #e8edf3;
+      color: #6d7788;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+    .seat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+    .seat {
+      min-height: 52px;
+      border: 2px solid #dfe5eb;
+      border-radius: 11px;
+      background: #fff;
+      color: #082b5c;
+      font-weight: 800;
+      transition: .15s ease;
+    }
+    .seat:hover:not(:disabled) { border-color: #16824b; transform: translateY(-1px); }
+    .seat.selected { background: #16824b; border-color: #16824b; color: #fff; }
+    .seat.booked { background: #d9dee6; border-color: #d9dee6; color: #8b95a4; cursor: not-allowed; }
+    .seat.single-left-seat { grid-column: 1; }
+    .seat.right-pair-seat { grid-column: auto; }
+
+    .booking-summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 20px;
+      padding: 18px 20px;
+      background: #f5f7fa;
+      border-radius: 16px;
+    }
+    .booking-summary div { min-width: 0; }
+    .booking-summary span { display: block; color: #7b8798; font-size: 12px; margin-bottom: 4px; }
+    .booking-summary strong { color: #082b5c; font-size: 16px; word-break: break-word; }
+
+    .continue-booking,
+    .passenger-submit {
+      width: 100%;
+      min-height: 52px;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 12px;
+      background: #f47b20;
+      color: #fff;
+      font-weight: 800;
+      font-size: 16px;
+    }
+    .continue-booking:hover:not(:disabled),
+    .passenger-submit:hover:not(:disabled) { background: #d96512; }
+    .continue-booking:disabled,
+    .passenger-submit:disabled { background: #cbd2db; cursor: not-allowed; }
+
+    .passenger-modal-box { width: min(100%, 820px); }
+    .passenger-list { display: grid; gap: 14px; margin-top: 26px; }
+    .passenger-card {
+      padding: 20px;
+      border: 1px solid #e1e6ed;
+      border-radius: 16px;
+      background: #fff;
+    }
+    .passenger-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .passenger-card-header strong { color: #082b5c; font-size: 17px; }
+    .passenger-card-header span {
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #fff4ea;
+      color: #d96512;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .passenger-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .passenger-field { display: flex; flex-direction: column; gap: 7px; }
+    .passenger-field label { color: #082b5c; font-size: 12px; font-weight: 800; }
+    .passenger-field input {
+      width: 100%;
+      min-height: 48px;
+      padding: 0 13px;
+      border: 1px solid #dce2e9;
+      border-radius: 10px;
+      outline: none;
+      color: #172033;
+      background: #fff;
+    }
+    .passenger-field input:focus { border-color: #f47b20; box-shadow: 0 0 0 3px rgba(244,123,32,.12); }
+    .passenger-field input:disabled { background: #f1f4f7; color: #7b8798; }
+    .same-number {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 11px;
+      color: #536073;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .same-number input { accent-color: #16824b; }
+    .passenger-error {
+      margin: 12px 0 0;
+      color: #c5362f;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .passenger-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      margin-top: 20px;
+      padding: 17px 20px;
+      border-radius: 15px;
+      background: #f5f7fa;
+      color: #082b5c;
+    }
+    .passenger-total small { color: #6d7788; }
+    .passenger-total strong { font-size: 20px; }
+    .passenger-back {
+      width: 100%;
+      min-height: 46px;
+      margin-top: 10px;
+      border: 1px solid #dce2e9;
+      border-radius: 11px;
+      background: #fff;
+      color: #082b5c;
+      font-weight: 800;
+    }
+    .passenger-back:hover { background: #f5f7fa; }
+
+    @media (max-width: 650px) {
+      .seat-overlay,
+      .passenger-overlay { align-items: flex-start; padding: 10px; }
+      .seat-modal-box,
+      .passenger-modal-box { max-height: calc(100vh - 20px); padding: 24px 16px; border-radius: 20px; }
+      .seat-modal-header, .passenger-header { padding: 0 28px; }
+      .seat-grid { gap: 7px; }
+      .seat { min-height: 47px; }
+      .booking-summary { flex-direction: column; gap: 12px; }
+      .passenger-fields { grid-template-columns: 1fr; }
+      .passenger-card { padding: 16px; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+injectBookingStyles();
+
+/* =========================================================
    SEAT MODAL
    Multi-seat selection + 2+1 layout.
-   The two seats are attached together on the RIGHT side,
-   while the single seat is on the LEFT side.
    ========================================================= */
 let activeBus = null;
 let selectedSeats = new Set();
 let seatModal = null;
+let passengerModal = null;
+let passengerDetails = {};
 
 function createSeatModal() {
   if (document.getElementById("seat-modal")) return;
@@ -196,11 +474,7 @@ function createSeatModal() {
   seatModal.querySelector(".seat-overlay").addEventListener("click", event => {
     if (event.target.classList.contains("seat-overlay")) closeSeatModal();
   });
-  seatModal.querySelector("#continue-booking").addEventListener("click", () => {
-    if (!activeBus || selectedSeats.size === 0) return;
-    const seats = [...selectedSeats].sort((a, b) => a - b).join(", ");
-    alert(`Seats ${seats} selected on ${activeBus.name}.\n\nTotal fare: ₹${(selectedSeats.size * activeBus.price).toLocaleString("en-IN")}\n\nNext step: passenger details and payment.`);
-  });
+  seatModal.querySelector("#continue-booking").addEventListener("click", openPassengerModal);
 }
 
 function getBookedSeats(bus) {
@@ -220,6 +494,7 @@ function openSeatModal(bus) {
   createSeatModal();
   activeBus = bus;
   selectedSeats = new Set();
+  passengerDetails = {};
 
   document.getElementById("seat-bus-name").textContent = bus.name;
   document.getElementById("seat-bus-meta").textContent = `${bus.type} • ₹${bus.price.toLocaleString("en-IN")} per seat • ${bus.seats} total seats`;
@@ -249,7 +524,7 @@ function renderSeatGrid(bus) {
     seat.textContent = seatNumber;
     seat.setAttribute("aria-label", `Seat ${seatNumber}`);
 
-    /* 2+1 layout: single seat LEFT, two attached seats RIGHT. */
+    /* 2+1 layout: single seat LEFT, two seats RIGHT. */
     const position = (seatNumber - 1) % 3;
     if (position === 0) seat.classList.add("single-left-seat");
     else seat.classList.add("right-pair-seat");
@@ -268,11 +543,8 @@ function renderSeatGrid(bus) {
 function toggleSeat(seatNumber) {
   if (!activeBus) return;
 
-  if (selectedSeats.has(seatNumber)) {
-    selectedSeats.delete(seatNumber);
-  } else {
-    selectedSeats.add(seatNumber);
-  }
+  if (selectedSeats.has(seatNumber)) selectedSeats.delete(seatNumber);
+  else selectedSeats.add(seatNumber);
 
   const selectedButton = [...document.querySelectorAll("#modal-seat-grid .seat")]
     .find(button => Number(button.textContent) === seatNumber);
@@ -293,6 +565,211 @@ function updateSeatSummary() {
   document.getElementById("continue-booking").disabled = seats.length === 0;
 }
 
+/* =========================================================
+   PASSENGER DETAILS
+   Only two details are collected:
+   1. Passenger name
+   2. WhatsApp number
+
+   For seats 2+, a checkbox lets the passenger reuse the
+   first passenger's WhatsApp number.
+   ========================================================= */
+function createPassengerModal() {
+  if (document.getElementById("passenger-modal")) return;
+
+  passengerModal = document.createElement("div");
+  passengerModal.id = "passenger-modal";
+  passengerModal.innerHTML = `
+    <div class="passenger-overlay" role="dialog" aria-modal="true" aria-label="Passenger details">
+      <div class="passenger-modal-box">
+        <button class="close-passenger-modal" type="button" aria-label="Close">×</button>
+        <div class="passenger-header">
+          <p class="passenger-step">STEP 2 OF 3</p>
+          <h2>Passenger Details</h2>
+          <p id="passenger-route-summary">Enter details for each selected seat.</p>
+        </div>
+        <form id="passenger-form" novalidate>
+          <div id="passenger-list" class="passenger-list"></div>
+          <div class="passenger-total">
+            <div><small id="passenger-seat-count"></small><br><strong>Total Fare</strong></div>
+            <strong id="passenger-total-fare">₹0</strong>
+          </div>
+          <p id="passenger-error" class="passenger-error" hidden></p>
+          <button class="passenger-submit" type="submit">Continue to Booking Review</button>
+          <button class="passenger-back" id="passenger-back" type="button">Back to Seat Selection</button>
+        </form>
+      </div>
+    </div>`;
+
+  document.body.appendChild(passengerModal);
+
+  passengerModal.querySelector(".close-passenger-modal").addEventListener("click", closePassengerModal);
+  passengerModal.querySelector(".passenger-overlay").addEventListener("click", event => {
+    if (event.target.classList.contains("passenger-overlay")) closePassengerModal();
+  });
+  passengerModal.querySelector("#passenger-back").addEventListener("click", () => {
+    closePassengerModal();
+    seatModal?.classList.add("open");
+    document.body.classList.add("modal-open");
+  });
+  passengerModal.querySelector("#passenger-form").addEventListener("submit", submitPassengerDetails);
+}
+
+function openPassengerModal() {
+  if (!activeBus || selectedSeats.size === 0) return;
+
+  createPassengerModal();
+  closeSeatModal();
+
+  const seats = [...selectedSeats].sort((a, b) => a - b);
+  const oldDetails = passengerDetails;
+  const list = document.getElementById("passenger-list");
+  list.innerHTML = "";
+
+  document.getElementById("passenger-route-summary").textContent = `${activeBus.name} • ${activeBus.from} → ${activeBus.to}`;
+  document.getElementById("passenger-seat-count").textContent = `${seats.length} ${seats.length === 1 ? "seat" : "seats"} selected`;
+  document.getElementById("passenger-total-fare").textContent = `₹${(seats.length * activeBus.price).toLocaleString("en-IN")}`;
+  document.getElementById("passenger-error").hidden = true;
+
+  seats.forEach((seatNumber, index) => {
+    const previous = oldDetails[seatNumber] || {};
+    const card = document.createElement("div");
+    card.className = "passenger-card";
+    card.dataset.seat = seatNumber;
+
+    card.innerHTML = `
+      <div class="passenger-card-header">
+        <strong>Passenger for Seat ${seatNumber}</strong>
+        <span>${index === 0 ? "PRIMARY" : "PASSENGER"}</span>
+      </div>
+      <div class="passenger-fields">
+        <div class="passenger-field">
+          <label for="passenger-name-${seatNumber}">Full Name</label>
+          <input id="passenger-name-${seatNumber}" name="name-${seatNumber}" type="text" autocomplete="name" placeholder="Enter passenger name" value="${escapeHTML(previous.name || "")}" required>
+        </div>
+        <div class="passenger-field">
+          <label for="passenger-whatsapp-${seatNumber}">WhatsApp Number</label>
+          <input id="passenger-whatsapp-${seatNumber}" name="whatsapp-${seatNumber}" class="whatsapp-input" type="tel" inputmode="numeric" autocomplete="tel" maxlength="10" placeholder="10-digit WhatsApp number" value="${escapeHTML(previous.whatsapp || "")}" required>
+        </div>
+      </div>
+      ${index > 0 ? `
+        <label class="same-number">
+          <input class="same-whatsapp" type="checkbox" ${previous.sameAsFirst ? "checked" : ""}>
+          Use the same WhatsApp number as Passenger 1
+        </label>` : `
+        <p style="margin:10px 0 0;color:#7b8798;font-size:12px;">This is the main WhatsApp number for the booking.</p>`}
+      <p class="passenger-error" hidden></p>`;
+
+    list.appendChild(card);
+  });
+
+  wirePassengerNumberSync();
+  passengerModal.classList.add("open");
+  document.body.classList.add("modal-open");
+}
+
+function closePassengerModal() {
+  if (!passengerModal) return;
+  passengerModal.classList.remove("open");
+  document.body.classList.remove("modal-open");
+}
+
+function wirePassengerNumberSync() {
+  const cards = [...document.querySelectorAll("#passenger-list .passenger-card")];
+  if (!cards.length) return;
+
+  const firstNumber = cards[0].querySelector(".whatsapp-input");
+
+  firstNumber.addEventListener("input", () => {
+    firstNumber.value = firstNumber.value.replace(/\D/g, "").slice(0, 10);
+    cards.slice(1).forEach(card => {
+      const checkbox = card.querySelector(".same-whatsapp");
+      const input = card.querySelector(".whatsapp-input");
+      if (checkbox?.checked) input.value = firstNumber.value;
+    });
+  });
+
+  cards.slice(1).forEach(card => {
+    const checkbox = card.querySelector(".same-whatsapp");
+    const input = card.querySelector(".whatsapp-input");
+
+    input.addEventListener("input", () => {
+      input.value = input.value.replace(/\D/g, "").slice(0, 10);
+    });
+
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        input.value = firstNumber.value;
+        input.disabled = true;
+      } else {
+        input.disabled = false;
+      }
+    });
+
+    if (checkbox.checked) {
+      input.value = firstNumber.value || input.value;
+      input.disabled = true;
+    }
+  });
+}
+
+function submitPassengerDetails(event) {
+  event.preventDefault();
+  if (!activeBus) return;
+
+  const cards = [...document.querySelectorAll("#passenger-list .passenger-card")];
+  const firstWhatsapp = cards[0]?.querySelector(".whatsapp-input")?.value.trim() || "";
+  const details = {};
+  let valid = true;
+
+  cards.forEach(card => {
+    const seatNumber = Number(card.dataset.seat);
+    const nameInput = card.querySelector("input[name^='name-']");
+    const whatsappInput = card.querySelector(".whatsapp-input");
+    const sameCheckbox = card.querySelector(".same-whatsapp");
+    const error = card.querySelector(".passenger-error");
+
+    const name = nameInput.value.trim();
+    const whatsapp = sameCheckbox?.checked ? firstWhatsapp : whatsappInput.value.trim();
+    const errors = [];
+
+    if (name.length < 2) errors.push("Enter the passenger's name.");
+    if (!/^[6-9]\d{9}$/.test(whatsapp)) errors.push("Enter a valid 10-digit WhatsApp number.");
+
+    if (errors.length) {
+      valid = false;
+      error.textContent = errors.join(" ");
+      error.hidden = false;
+    } else {
+      error.hidden = true;
+      details[seatNumber] = {
+        name,
+        whatsapp,
+        sameAsFirst: Boolean(sameCheckbox?.checked)
+      };
+    }
+  });
+
+  const globalError = document.getElementById("passenger-error");
+  globalError.hidden = true;
+
+  if (!valid) {
+    globalError.textContent = "Please complete all passenger details before continuing.";
+    globalError.hidden = false;
+    return;
+  }
+
+  passengerDetails = details;
+
+  const seats = [...selectedSeats].sort((a, b) => a - b);
+  const summary = seats.map(seat => `Seat ${seat}: ${details[seat].name}`).join("\n");
+  const total = seats.length * activeBus.price;
+
+  alert(`Passenger details saved.\n\n${summary}\n\nTotal fare: ₹${total.toLocaleString("en-IN")}\n\nBooking review and payment will be the next stage.`);
+}
+
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && seatModal?.classList.contains("open")) closeSeatModal();
+  if (event.key !== "Escape") return;
+  if (passengerModal?.classList.contains("open")) closePassengerModal();
+  else if (seatModal?.classList.contains("open")) closeSeatModal();
 });
