@@ -3,21 +3,17 @@ const today = new Date();
 
 const isoToday = new Date(
   today.getTime() - today.getTimezoneOffset() * 60000
-)
-  .toISOString()
-  .slice(0, 10);
+).toISOString().slice(0, 10);
 
 dateInput.min = isoToday;
 
 
-/* =========================================================
-   SAMPLE BUS DATA
-   ========================================================= */
+/* =========================
+   BUS DATA
+   ========================= */
 
 const buses = [
   {
-    from: "Mankachar",
-    to: "Guwahati",
     operator: "ASTC",
     name: "Mankachar Express",
     type: "AC Seater",
@@ -25,12 +21,10 @@ const buses = [
     departure: "05:30 AM",
     arrival: "01:00 PM",
     duration: "7h 30m",
-    seats: 14
+    seats: 32
   },
 
   {
-    from: "Mankachar",
-    to: "Guwahati",
     operator: "JANBAHON",
     name: "South Assam Travels",
     type: "Non-AC Seater",
@@ -38,82 +32,59 @@ const buses = [
     departure: "07:30 AM",
     arrival: "03:30 PM",
     duration: "8h",
-    seats: 21
+    seats: 36
   },
 
   {
-    from: "Guwahati",
-    to: "Mankachar",
-    operator: "JANBAHON",
-    name: "Brahmaputra Express",
+    operator: "Assam Roadways",
+    name: "Brahmaputra Superfast",
     type: "AC Seater",
-    price: 450,
-    departure: "06:00 AM",
-    arrival: "01:45 PM",
-    duration: "7h 45m",
-    seats: 17
+    price: 520,
+    departure: "09:00 AM",
+    arrival: "04:30 PM",
+    duration: "7h 30m",
+    seats: 40
   },
 
   {
-    from: "Dhubri",
-    to: "Guwahati",
-    operator: "ASTC",
-    name: "Dhubri Express",
+    operator: "Northeast Travels",
+    name: "Barak Valley Express",
+    type: "AC Seater",
+    price: 560,
+    departure: "10:30 AM",
+    arrival: "06:30 PM",
+    duration: "8h",
+    seats: 44
+  },
+
+  {
+    operator: "JANBAHON",
+    name: "Assam Comfort",
     type: "Non-AC Seater",
     price: 350,
-    departure: "06:30 AM",
-    arrival: "01:30 PM",
-    duration: "7h",
-    seats: 18
-  },
-
-  {
-    from: "Guwahati",
-    to: "Dhubri",
-    operator: "JANBAHON",
-    name: "Dhubri Superfast",
-    type: "AC Seater",
-    price: 430,
-    departure: "07:00 AM",
-    arrival: "02:00 PM",
-    duration: "7h",
-    seats: 12
-  },
-
-  {
-    from: "Hatsingimari",
-    to: "Guwahati",
-    operator: "ASTC",
-    name: "Hatsingimari Express",
-    type: "Non-AC Seater",
-    price: 410,
-    departure: "06:15 AM",
-    arrival: "02:15 PM",
-    duration: "8h",
-    seats: 16
+    departure: "12:00 PM",
+    arrival: "08:30 PM",
+    duration: "8h 30m",
+    seats: 48
   }
 ];
 
 
-/* =========================================================
-   SWAP BUTTON
-   ========================================================= */
+/* =========================
+   SWAP FROM / TO
+   ========================= */
 
 document.getElementById("swap").addEventListener("click", () => {
-
   const from = document.getElementById("from");
   const to = document.getElementById("to");
 
-  const temp = from.value;
-
-  from.value = to.value;
-  to.value = temp;
+  [from.value, to.value] = [to.value, from.value];
 });
 
 
-/* =========================================================
-   POPULAR ROUTE BUTTONS
-   ========================================================= */
+/* =========================
+   POPULAR ROUTES
+   ========================= */
 
 document.querySelectorAll(".route-card").forEach(card => {
 
@@ -134,169 +105,113 @@ document.querySelectorAll(".route-card").forEach(card => {
 });
 
 
-/* =========================================================
-   SEARCH BUS
-   ========================================================= */
+/* =========================
+   SEARCH BUSES
+   ========================= */
 
-document
-  .getElementById("searchForm")
-  .addEventListener("submit", function(event) {
+document.getElementById("searchForm").addEventListener("submit", event => {
 
-    event.preventDefault();
+  event.preventDefault();
 
-    const from = document.getElementById("from").value;
-    const to = document.getElementById("to").value;
-    const date = document.getElementById("date").value;
+  const from = document.getElementById("from").value;
+  const to = document.getElementById("to").value;
+  const date = document.getElementById("date").value;
 
-    if (!from || !to || !date) {
+  if (!from || !to || !date) {
+    alert("Please select origin, destination and journey date.");
+    return;
+  }
 
-      alert("Please select origin, destination and journey date.");
+  if (from === to) {
+    alert("Origin and destination cannot be the same.");
+    return;
+  }
 
-      return;
-    }
 
-    if (from === to) {
+  /* =========================
+     FIND AVAILABLE BUSES
+     ========================= */
 
-      alert("Origin and destination cannot be the same.");
+  const availableBuses = buses;
 
-      return;
-    }
 
-    const matchingBuses = buses.filter(bus =>
-      bus.from === from &&
-      bus.to === to
-    );
+  /* =========================
+     RESULTS SECTION
+     ========================= */
 
-    displayResults(
-      matchingBuses,
-      from,
-      to,
-      date
-    );
+  const resultsSection = document.getElementById("bus-results");
+  const resultsList = document.getElementById("bus-results-list");
+  const resultsSummary = document.getElementById("results-summary");
 
+  const formattedDate = new Date(
+    date + "T00:00:00"
+  ).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
   });
 
 
-/* =========================================================
-   DISPLAY BUS RESULTS
-   ========================================================= */
-
-function displayResults(
-  matchingBuses,
-  from,
-  to,
-  date
-) {
-
-  const resultsSection =
-    document.getElementById("bus-results");
-
-  const resultsList =
-    document.getElementById("bus-results-list");
-
-  const summary =
-    document.getElementById("results-summary");
+  resultsSummary.textContent =
+    `${from} → ${to} • ${formattedDate} • ${availableBuses.length} bus services found`;
 
 
-  /* Format date */
-
-  const formattedDate =
-    new Date(date + "T00:00:00").toLocaleDateString(
-      "en-IN",
-      {
-        day: "numeric",
-        month: "short",
-        year: "numeric"
-      }
-    );
-
-
-  /* Update heading */
-
-  summary.textContent =
-    `${from} → ${to} • ${formattedDate} • ${matchingBuses.length} bus service${matchingBuses.length !== 1 ? "s" : ""} found`;
-
-
-  /* Clear previous results */
+  /* Clear old results */
 
   resultsList.innerHTML = "";
 
 
-  /* No buses */
+  /* =========================
+     CREATE BUS CARDS
+     ========================= */
 
-  if (matchingBuses.length === 0) {
+  availableBuses.forEach(bus => {
 
-    resultsList.innerHTML = `
-      <div class="empty-results">
-        <h3>No buses found</h3>
-        <p>
-          We could not find a bus for this route yet.
-          Please try another route or date.
-        </p>
-      </div>
-    `;
+    const card = document.createElement("article");
 
-  } else {
+    card.className = "bus-card";
 
-    matchingBuses.forEach(bus => {
-
-      const card = document.createElement("article");
-
-      card.className = "bus-card";
-
-
-      card.innerHTML = `
+    card.innerHTML = `
+      <div class="bus-card-top">
 
         <div class="bus-operator">
+          ${bus.operator}
+        </div>
 
-          <small>${bus.operator}</small>
+        <div class="bus-price">
+          ₹${bus.price}
+          <span>per seat</span>
+        </div>
+
+      </div>
+
+
+      <div class="bus-main">
+
+        <div class="bus-info">
 
           <h3>${bus.name}</h3>
 
-          <div class="bus-type">
+          <p class="bus-type">
             ${bus.type}
-          </div>
+          </p>
 
-          <div class="bus-price">
-            ₹${bus.price} per seat
-          </div>
+          <div class="bus-timing">
 
-        </div>
+            <div class="time-point">
+              <strong>${bus.departure}</strong>
+              <span>${from}</span>
+            </div>
 
+            <div class="duration">
+              ${bus.duration}
+            </div>
 
-        <div class="bus-journey">
+            <div class="time-point">
+              <strong>${bus.arrival}</strong>
+              <span>${to}</span>
+            </div>
 
-          <div>
-            <span class="bus-time">
-              ${bus.departure}
-            </span>
-
-            <span class="bus-place">
-              ${bus.from}
-            </span>
-          </div>
-
-          <div class="bus-duration">
-            ${bus.duration}
-          </div>
-
-          <div>
-            <span class="bus-time">
-              ${bus.arrival}
-            </span>
-
-            <span class="bus-place">
-              ${bus.to}
-            </span>
-          </div>
-
-        </div>
-
-
-        <div>
-
-          <div class="bus-seats">
-            ${bus.seats} seats available
           </div>
 
         </div>
@@ -304,44 +219,27 @@ function displayResults(
 
         <div class="bus-action">
 
+          <div class="seat-count">
+            ${bus.seats} seats available
+          </div>
+
           <button
             class="book-seat"
             type="button"
             data-bus="${bus.name}"
+            data-seats="${bus.seats}"
           >
             Book Seat
           </button>
 
         </div>
 
-      `;
+      </div>
+    `;
 
+    resultsList.appendChild(card);
 
-      resultsList.appendChild(card);
-
-    });
-
-
-    /* Book buttons */
-
-    document
-      .querySelectorAll(".book-seat")
-      .forEach(button => {
-
-        button.addEventListener("click", () => {
-
-          const busName =
-            button.dataset.bus;
-
-          alert(
-            `Booking for ${busName} will be connected in the next stage.`
-          );
-
-        });
-
-      });
-
-  }
+  });
 
 
   /* Scroll to results */
@@ -351,4 +249,24 @@ function displayResults(
     block: "start"
   });
 
-}
+
+  /* =========================
+     BOOK SEAT BUTTONS
+     ========================= */
+
+  document.querySelectorAll(".book-seat").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+      const busName = button.dataset.bus;
+      const seats = button.dataset.seats;
+
+      alert(
+        `${busName}\n\n${seats} seats are currently available.\n\nSeat selection and payment will be connected in the next stage.`
+      );
+
+    });
+
+  });
+
+});
