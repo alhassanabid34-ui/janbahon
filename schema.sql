@@ -1,5 +1,20 @@
 PRAGMA foreign_keys = ON;
 
+CREATE TABLE IF NOT EXISTS owners (
+  owner_id TEXT PRIMARY KEY,
+  mobile TEXT NOT NULL UNIQUE,
+  full_name TEXT NOT NULL,
+  business_name TEXT NOT NULL,
+  address TEXT NOT NULL,
+  aadhaar_doc_key TEXT NOT NULL,
+  pan_doc_key TEXT NOT NULL,
+  bank_account_enc TEXT NOT NULL,
+  bank_ifsc TEXT NOT NULL,
+  bank_holder TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS buses (
   bus_id TEXT PRIMARY KEY,
   operator TEXT NOT NULL,
@@ -11,7 +26,12 @@ CREATE TABLE IF NOT EXISTS buses (
   departure TEXT NOT NULL,
   arrival TEXT NOT NULL,
   duration TEXT NOT NULL,
-  total_seats INTEGER NOT NULL
+  total_seats INTEGER NOT NULL,
+  owner_id TEXT,
+  photo_keys TEXT NOT NULL DEFAULT '[]',
+  video_key TEXT,
+  created_at TEXT NOT NULL DEFAULT '',
+  FOREIGN KEY (owner_id) REFERENCES owners(owner_id)
 );
 
 CREATE TABLE IF NOT EXISTS bookings (
@@ -37,15 +57,27 @@ CREATE TABLE IF NOT EXISTS passengers (
   FOREIGN KEY (bus_id) REFERENCES buses(bus_id)
 );
 
+CREATE TABLE IF NOT EXISTS seat_blocks (
+  block_id TEXT PRIMARY KEY,
+  owner_id TEXT NOT NULL,
+  bus_id TEXT NOT NULL,
+  seat_number INTEGER NOT NULL,
+  start_date TEXT NOT NULL,
+  end_date TEXT,
+  reason TEXT NOT NULL DEFAULT 'Blocked by bus owner',
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (owner_id) REFERENCES owners(owner_id) ON DELETE CASCADE,
+  FOREIGN KEY (bus_id) REFERENCES buses(bus_id) ON DELETE CASCADE
+);
+
 CREATE UNIQUE INDEX IF NOT EXISTS uq_active_bus_date_seat
   ON passengers(bus_id, journey_date, seat_number)
   WHERE booking_status = 'confirmed';
-
-CREATE INDEX IF NOT EXISTS idx_passengers_bus_date
-  ON passengers(bus_id, journey_date);
-
-CREATE INDEX IF NOT EXISTS idx_bookings_date
-  ON bookings(journey_date);
+CREATE INDEX IF NOT EXISTS idx_passengers_bus_date ON passengers(bus_id, journey_date);
+CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(journey_date);
+CREATE INDEX IF NOT EXISTS idx_buses_owner ON buses(owner_id);
+CREATE INDEX IF NOT EXISTS idx_seat_blocks_bus_date ON seat_blocks(bus_id, start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_owners_mobile ON owners(mobile);
 
 INSERT OR IGNORE INTO buses
 (bus_id, operator, name, bus_type, price, from_city, to_city, departure, arrival, duration, total_seats)
