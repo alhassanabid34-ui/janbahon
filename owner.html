@@ -53,9 +53,17 @@
       </div>
 
       <section class="panel">
+        <div class="section-head"><div><p class="eyebrow">OPERATOR</p><h2 id="operatorDisplay">Operator</h2><p id="operatorMobile" class="muted"></p></div><span class="hint">Operator name is linked to this owner account</span></div>
+        <div class="operator-chart" aria-label="Operator information">
+          <div><span class="small">Operator name</span><strong id="operatorChartName">—</strong></div>
+          <div><span class="small">Buses managed</span><strong id="operatorBusCount">0</strong></div>
+        </div>
+      </section>
+
+      <section class="panel">
         <div class="section-head"><div><p class="eyebrow">ADD BUS</p><h2>Register a bus</h2></div><span class="hint">Up to 5 photos + 1 video</span></div>
         <form id="busForm" class="form-grid">
-          <label>Operator name<input name="operator" required></label>
+          <label>Operator name<input id="busOperator" name="operator" required readonly></label>
           <label>Bus name<input name="name" placeholder="e.g. Mankachar Express" required></label>
           <label>Bus type<select name="busType" required><option>AC Seater</option><option>Non-AC Seater</option><option>AC Sleeper</option><option>Non-AC Sleeper</option></select></label>
           <label>Fare per seat (₹)<input name="price" type="number" min="1" required></label>
