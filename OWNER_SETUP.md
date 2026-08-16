@@ -1,8 +1,8 @@
 # JANBAHON Bus Owner Portal — Setup
 
-## 1. Run the D1 migration
+## 1. Run the D1 migrations
 
-In the `janbahon-db` D1 Console, run the complete contents of `migrations/0002_owner_portal.sql` once.
+In the `janbahon-db` D1 Console, run the required migration files in order, including `migrations/0003_2factor_otp.sql` once.
 
 ## 2. Add R2 storage
 
@@ -20,21 +20,26 @@ In Workers & Pages → janbahon → Settings → Variables and Secrets, add thes
 
 - `OWNER_AUTH_SECRET` — long random secret used to sign owner sessions.
 - `OWNER_DATA_KEY` — long random secret used to encrypt bank account numbers before D1 storage.
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
-- `TWILIO_VERIFY_SERVICE_SID`
+- `TWOFACTOR_API_KEY` — your 2Factor API key.
+- `TWOFACTOR_OTP_TEMPLATE` — optional; defaults to `JNBHN1`, the approved JANBAHON OTP template.
 
 Do not commit these values to GitHub or send them in chat.
 
-## 4. Configure Twilio Verify
+## 4. Configure 2Factor OTP
 
-Create a Twilio Verify Service with SMS enabled. The owner portal uses that service for mobile OTP login and registration.
+JANBAHON uses the same 2Factor account/API key for passenger and bus-owner phone verification.
+
+- Send OTP: 2Factor `AUTOGEN` endpoint.
+- Verify OTP: 2Factor `VERIFY3` endpoint using **mobile number + OTP**.
+- JANBAHON does not store the actual OTP.
+- The backend keeps only a short-lived resend/attempt record in D1.
+- Passenger and bus-owner flows use different `purpose` values so their rate limits and verification records remain separate while using the same 2Factor account.
 
 ## 5. Redeploy
 
-After the D1 migration, R2 binding and secrets are ready, redeploy the Pages project.
+After the D1 migration, R2 binding and encrypted secrets are ready, redeploy the Pages project.
 
-## Owner features now included
+## Owner features included
 
 - Bottom-of-homepage **Bus Owner Login / Register** link.
 - Mobile number + OTP authentication.
