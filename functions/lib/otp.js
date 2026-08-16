@@ -1,5 +1,5 @@
 const RESEND_MS = 60 * 1000;
-const OTP_TEMPLATE = "JNBHN1";
+const OTP_TEMPLATE = "JNBHN 1";
 
 function normalizeMobile(value) {
   const digits = String(value || "").replace(/\D/g, "");
@@ -42,8 +42,8 @@ export async function sendOtp(env, mobile, purpose) {
     throw new Error(data?.Details || data?.message || "2Factor could not send the OTP.");
   }
 
-  // 2Factor generates and verifies the OTP. We only keep a resend timestamp;
-  // the OTP itself is never stored in JanBahon.
+  // 2Factor generates and verifies the OTP. JanBahon never stores the OTP itself.
+  // D1 keeps only a short-lived resend/attempt record for abuse protection.
   if (env.DB) {
     await env.DB.prepare(
       `INSERT INTO otp_codes (mobile, purpose, otp_hash, expires_at, attempts, last_sent_at)
@@ -78,7 +78,6 @@ export async function verifyOtp(env, mobile, purpose, code) {
   const response = await fetch(endpoint, { method: "GET", headers: { "accept": "application/json" } });
   const data = await getJson(response);
   const status = String(data?.Status || "").toLowerCase();
-  const details = String(data?.Details || "").toLowerCase();
 
   if (!response.ok || status !== "success") {
     if (env.DB) {
@@ -93,7 +92,7 @@ export async function verifyOtp(env, mobile, purpose, code) {
       .bind(normalized, purpose).run();
   }
 
-  return { success: true, mobile: normalized, details };
+  return { success: true, mobile: normalized };
 }
 
 export { normalizeMobile };
