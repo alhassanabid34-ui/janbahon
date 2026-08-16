@@ -84,7 +84,7 @@
   }
 
   function parseReviewPassengers() {
-    return [...document.querySelectorAll("#review-modal.open .review-passenger")].map(row => {
+    return [...document.querySelectorAll("#review-modal .review-passenger")].map(row => {
       const strong = row.querySelector("strong")?.textContent.trim() || "";
       const match = strong.match(/^Seat\s+(\d+)\s+•\s+(.+)$/);
       const phone = row.querySelector("span")?.textContent.replace(/\D/g, "").slice(-10) || "";
@@ -110,7 +110,6 @@
     const box = modal?.querySelector(".booking-box");
     if (!box) return;
 
-    const busName = document.querySelector("#review-modal .review-place")?.closest(".review-section")?.textContent || "";
     const currentBusName = Object.entries(BUS_IDS).find(([, id]) => id === result.busId)?.[0] || "Bus";
     const amount = Number(result.totalAmount || 0).toLocaleString("en-IN");
 
@@ -143,7 +142,6 @@
     button.disabled = true;
     button.textContent = "Saving booking...";
 
-    const heading = document.querySelector("#review-modal .booking-head h2");
     const busSection = document.querySelector("#review-modal .review-section");
     const busText = busSection?.textContent || "";
     const busName = Object.keys(BUS_IDS).find(name => busText.includes(name)) || "";
