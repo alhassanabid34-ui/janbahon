@@ -6,87 +6,640 @@
   <title>JANBAHON — Bus Owner Portal</title>
   <link rel="stylesheet" href="owner.css">
 </head>
+
 <body>
+
   <header class="owner-header">
-    <a href="/" class="brand"><strong>JAN<span>BAHON</span></strong><small>Bus Owner Portal</small></a>
+    <a href="/" class="brand">
+      <strong>JAN<span>BAHON</span></strong>
+      <small>Bus Owner Portal</small>
+    </a>
+
     <a href="/" class="back-link">← Passenger Home</a>
   </header>
 
+
   <main class="owner-main">
+
+    <!-- ================= LOGIN ================= -->
+
     <section id="loginView" class="panel auth-panel">
+
       <p class="eyebrow">BUS OWNER</p>
+
       <h1>Login with mobile & OTP</h1>
-      <p class="muted">Manage your buses, seats and media from one place.</p>
+
+      <p class="muted">
+        Manage your buses, seats and media from one place.
+      </p>
+
       <form id="otpForm">
-        <label>Mobile number<input id="mobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number" required></label>
-        <button class="primary" id="sendOtp" type="submit">Send OTP</button>
+
+        <label>
+          Mobile number
+          <input
+            id="mobile"
+            type="tel"
+            inputmode="numeric"
+            maxlength="10"
+            placeholder="10-digit mobile number"
+            required
+          >
+        </label>
+
+        <button
+          class="primary"
+          id="sendOtp"
+          type="submit"
+        >
+          Send OTP
+        </button>
+
       </form>
+
+
       <div id="otpStep" class="hidden">
-        <label>Enter OTP<input id="otp" type="text" inputmode="numeric" maxlength="6" placeholder="6-digit OTP"></label>
-        <button class="primary" id="verifyOtp" type="button">Verify & Continue</button>
+
+        <label>
+          Enter OTP
+          <input
+            id="otp"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="6-digit OTP"
+          >
+        </label>
+
+        <button
+          class="primary"
+          id="verifyOtp"
+          type="button"
+        >
+          Verify & Continue
+        </button>
+
       </div>
+
       <p id="authMessage" class="message"></p>
+
     </section>
+
+
+    <!-- ================= REGISTER ================= -->
 
     <section id="registerView" class="panel hidden">
-      <div class="section-head"><div><p class="eyebrow">NEW OWNER</p><h2>Register your bus business</h2></div><span class="status pending">KYC verification pending</span></div>
-      <p class="notice">Aadhaar/PAN documents are stored privately for verification. Do not upload unrelated documents.</p>
-      <form id="registerForm" class="form-grid">
-        <label>Full name<input name="fullName" required></label>
-        <label>Business / operator name<input name="businessName" required></label>
-        <label class="wide">Business address<textarea name="address" rows="3" required></textarea></label>
-        <label>Bank account holder<input name="bankHolder" required></label>
-        <label>Bank account number<input name="bankAccount" inputmode="numeric" required></label>
-        <label>IFSC code<input name="bankIfsc" maxlength="11" required></label>
-        <label>Aadhaar document<input name="aadhaar" type="file" accept=".pdf,.jpg,.jpeg,.png" required></label>
-        <label>PAN document<input name="pan" type="file" accept=".pdf,.jpg,.jpeg,.png" required></label>
-        <label class="wide check"><input name="consent" type="checkbox" required> I confirm these documents and bank details belong to me/the business and may be used for owner verification.</label>
-        <button class="primary wide" type="submit">Submit Registration</button>
-      </form>
-      <p id="registerMessage" class="message"></p>
-    </section>
 
-    <section id="dashboardView" class="hidden">
-      <div class="dashboard-head">
-        <div><p class="eyebrow">OWNER DASHBOARD</p><h1 id="ownerName">Welcome</h1><p id="ownerBusiness" class="muted"></p></div>
-        <button id="logout" class="secondary">Logout</button>
+      <div class="section-head">
+
+        <div>
+          <p class="eyebrow">NEW OWNER</p>
+          <h2>Register your bus business</h2>
+        </div>
+
+        <span class="status pending">
+          KYC verification pending
+        </span>
+
       </div>
 
-      <section class="panel">
-        <div class="section-head"><div><p class="eyebrow">OPERATOR</p><h2 id="operatorDisplay">Operator</h2><p id="operatorMobile" class="muted"></p></div><span class="hint">Operator name is linked to this owner account</span></div>
-        <div class="operator-chart" aria-label="Operator information">
-          <div><span class="small">Operator name</span><strong id="operatorChartName">—</strong></div>
-          <div><span class="small">Buses managed</span><strong id="operatorBusCount">0</strong></div>
+
+      <p class="notice">
+        Aadhaar/PAN documents are stored privately for verification.
+        Do not upload unrelated documents.
+      </p>
+
+
+      <form id="registerForm" class="form-grid">
+
+        <label>
+          Full name
+          <input name="fullName" required>
+        </label>
+
+
+        <label>
+          Business / operator name
+          <input name="businessName" required>
+        </label>
+
+
+        <label class="wide">
+          Business address
+          <textarea
+            name="address"
+            rows="3"
+            required
+          ></textarea>
+        </label>
+
+
+        <label>
+          Bank account holder
+          <input name="bankHolder" required>
+        </label>
+
+
+        <label>
+          Bank account number
+          <input
+            name="bankAccount"
+            inputmode="numeric"
+            required
+          >
+        </label>
+
+
+        <label>
+          IFSC code
+          <input
+            name="bankIfsc"
+            maxlength="11"
+            required
+          >
+        </label>
+
+
+        <label>
+          Aadhaar document
+          <input
+            name="aadhaar"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            required
+          >
+        </label>
+
+
+        <label>
+          PAN document
+          <input
+            name="pan"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            required
+          >
+        </label>
+
+
+        <label class="wide check">
+
+          <input
+            name="consent"
+            type="checkbox"
+            required
+          >
+
+          I confirm these documents and bank details belong to
+          me/the business and may be used for owner verification.
+
+        </label>
+
+
+        <button
+          class="primary wide"
+          type="submit"
+        >
+          Submit Registration
+        </button>
+
+      </form>
+
+
+      <p id="registerMessage" class="message"></p>
+
+    </section>
+
+
+
+    <!-- ================= OWNER DASHBOARD ================= -->
+
+    <section id="dashboardView" class="hidden">
+
+
+      <!-- DASHBOARD HEADER -->
+
+      <div class="dashboard-head">
+
+        <div>
+
+          <p class="eyebrow">
+            OWNER DASHBOARD
+          </p>
+
+          <h1 id="ownerName">
+            Welcome
+          </h1>
+
+          <p
+            id="ownerBusiness"
+            class="muted"
+          ></p>
+
         </div>
-      </section>
+
+
+        <button
+          id="logout"
+          class="secondary"
+        >
+          Logout
+        </button>
+
+      </div>
+
+
+
+      <!-- ================= OPERATORS ================= -->
 
       <section class="panel">
-        <div class="section-head"><div><p class="eyebrow">ADD BUS</p><h2>Register a bus</h2></div><span class="hint">Up to 5 photos + 1 video</span></div>
-        <form id="busForm" class="form-grid">
-          <label>Operator name<input id="busOperator" name="operator" required readonly></label>
-          <label>Bus name<input name="name" placeholder="e.g. Mankachar Express" required></label>
-          <label>Bus type<select name="busType" required><option>AC Seater</option><option>Non-AC Seater</option><option>AC Sleeper</option><option>Non-AC Sleeper</option></select></label>
-          <label>Fare per seat (₹)<input name="price" type="number" min="1" required></label>
-          <label>From city<input name="fromCity" required></label>
-          <label>To city<input name="toCity" required></label>
-          <label>Departure<input name="departure" placeholder="05:30 AM" required></label>
-          <label>Arrival<input name="arrival" placeholder="01:00 PM" required></label>
-          <label>Duration<input name="duration" placeholder="7h 30m" required></label>
-          <label>Total seats<input name="totalSeats" type="number" min="4" max="100" required></label>
-          <label class="wide">Bus photos <span class="small">maximum 5, JPG/PNG/WebP, 8 MB each</span><input id="busPhotos" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>
-          <label class="wide">Bus video <span class="small">maximum 1, MP4/WebM/MOV, 25 MB</span><input name="video" type="file" accept="video/mp4,video/webm,video/quicktime"></label>
-          <button class="primary wide" type="submit">Add Bus</button>
-        </form>
-        <p id="busMessage" class="message"></p>
+
+        <div class="section-head">
+
+          <div>
+
+            <p class="eyebrow">
+              OPERATORS
+            </p>
+
+            <h2>
+              Your Bus Operators
+            </h2>
+
+            <p
+              id="operatorMobile"
+              class="muted"
+            ></p>
+
+          </div>
+
+
+          <span class="hint">
+            Operators linked to this owner account
+          </span>
+
+        </div>
+
+
+        <!--
+          JavaScript will automatically create
+          one card for every operator.
+
+          Example:
+
+          ASTC
+          1 bus
+
+          Assam Roadways
+          1 bus
+
+          JANBAHON
+          2 buses
+
+          Northeast Travels
+          1 bus
+        -->
+
+        <div
+          id="operatorChart"
+          aria-label="Bus operator information"
+          style="
+            display:grid;
+            grid-template-columns:repeat(
+              auto-fit,
+              minmax(220px,1fr)
+            );
+            gap:12px;
+          "
+        >
+
+          <div
+            style="
+              padding:16px;
+              border:1px solid #e1e6ed;
+              border-radius:14px;
+              background:#f8fafc;
+            "
+          >
+
+            <span class="small">
+              Loading operators
+            </span>
+
+            <strong
+              style="
+                display:block;
+                margin-top:6px;
+                color:#082b5c;
+                font-size:18px;
+              "
+            >
+              ...
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- Total buses -->
+
+        <div
+          style="
+            margin-top:16px;
+            padding:14px 16px;
+            border-radius:12px;
+            background:#f6f8fb;
+          "
+        >
+
+          <span class="small">
+            Total buses managed
+          </span>
+
+          <strong
+            id="operatorBusCount"
+            style="
+              display:block;
+              margin-top:5px;
+              color:#082b5c;
+              font-size:22px;
+            "
+          >
+            0
+          </strong>
+
+        </div>
+
       </section>
+
+
+
+      <!-- ================= ADD BUS ================= -->
+
+      <section class="panel">
+
+        <div class="section-head">
+
+          <div>
+
+            <p class="eyebrow">
+              ADD BUS
+            </p>
+
+            <h2>
+              Register a bus
+            </h2>
+
+          </div>
+
+          <span class="hint">
+            Up to 5 photos + 1 video
+          </span>
+
+        </div>
+
+
+        <form
+          id="busForm"
+          class="form-grid"
+        >
+
+
+          <label>
+            Operator name
+
+            <input
+              id="busOperator"
+              name="operator"
+              required
+              readonly
+            >
+
+          </label>
+
+
+          <label>
+            Bus name
+
+            <input
+              name="name"
+              placeholder="e.g. Mankachar Express"
+              required
+            >
+
+          </label>
+
+
+          <label>
+            Bus type
+
+            <select
+              name="busType"
+              required
+            >
+
+              <option>
+                AC Seater
+              </option>
+
+              <option>
+                Non-AC Seater
+              </option>
+
+              <option>
+                AC Sleeper
+              </option>
+
+              <option>
+                Non-AC Sleeper
+              </option>
+
+            </select>
+
+          </label>
+
+
+          <label>
+            Fare per seat (₹)
+
+            <input
+              name="price"
+              type="number"
+              min="1"
+              required
+            >
+
+          </label>
+
+
+          <label>
+            From city
+
+            <input
+              name="fromCity"
+              required
+            >
+
+          </label>
+
+
+          <label>
+            To city
+
+            <input
+              name="toCity"
+              required
+            >
+
+          </label>
+
+
+          <label>
+            Departure
+
+            <input
+              name="departure"
+              placeholder="05:30 AM"
+              required
+            >
+
+          </label>
+
+
+          <label>
+            Arrival
+
+            <input
+              name="arrival"
+              placeholder="01:00 PM"
+              required
+            >
+
+          </label>
+
+
+          <label>
+            Duration
+
+            <input
+              name="duration"
+              placeholder="7h 30m"
+              required
+            >
+
+          </label>
+
+
+          <label>
+            Total seats
+
+            <input
+              name="totalSeats"
+              type="number"
+              min="4"
+              max="100"
+              required
+            >
+
+          </label>
+
+
+          <label class="wide">
+
+            Bus photos
+
+            <span class="small">
+              maximum 5, JPG/PNG/WebP, 8 MB each
+            </span>
+
+            <input
+              id="busPhotos"
+              name="photos"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+            >
+
+          </label>
+
+
+          <label class="wide">
+
+            Bus video
+
+            <span class="small">
+              maximum 1, MP4/WebM/MOV, 25 MB
+            </span>
+
+            <input
+              name="video"
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime"
+            >
+
+          </label>
+
+
+          <button
+            class="primary wide"
+            type="submit"
+          >
+            Add Bus
+          </button>
+
+        </form>
+
+
+        <p
+          id="busMessage"
+          class="message"
+        ></p>
+
+      </section>
+
+
+
+      <!-- ================= MY BUSES ================= -->
 
       <section>
-        <div class="section-head"><div><p class="eyebrow">MY BUSES</p><h2>Manage seats</h2></div><span class="hint">Booked seats can never be blocked</span></div>
-        <div id="busList" class="bus-list"></div>
+
+        <div class="section-head">
+
+          <div>
+
+            <p class="eyebrow">
+              MY BUSES
+            </p>
+
+            <h2>
+              Manage seats
+            </h2>
+
+          </div>
+
+          <span class="hint">
+            Booked seats can never be blocked
+          </span>
+
+        </div>
+
+
+        <div
+          id="busList"
+          class="bus-list"
+        ></div>
+
       </section>
+
+
     </section>
+
   </main>
 
+
+
   <script src="owner.js"></script>
+
 </body>
 </html>
