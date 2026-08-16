@@ -2,7 +2,9 @@
 
 ## 1. Run the D1 migrations
 
-In the `janbahon-db` D1 Console, run the required migration files in order, including `migrations/0003_2factor_otp.sql` once.
+In the `janbahon-db` D1 Console, run the required migration files in order, including `migrations/0003_2factor_otp.sql` and `migrations/0004_customer_auth.sql` once.
+
+Customer authentication also self-initializes its `users` table if the migration has not yet been applied, so a first `/api/auth` request will create the table automatically.
 
 ## 2. Add R2 storage
 
@@ -22,6 +24,7 @@ In Workers & Pages → janbahon → Settings → Variables and Secrets, add thes
 - `OWNER_DATA_KEY` — long random secret used to encrypt bank account numbers before D1 storage.
 - `TWOFACTOR_API_KEY` — your 2Factor API key.
 - `TWOFACTOR_OTP_TEMPLATE` — optional; defaults to `JNBHN1`, the approved JANBAHON OTP template.
+- `USER_AUTH_SECRET` — optional separate long random secret for passenger sessions. If omitted, passenger login reuses `OWNER_AUTH_SECRET` so the existing setup continues to work.
 
 Do not commit these values to GitHub or send them in chat.
 
@@ -35,7 +38,16 @@ JANBAHON uses the same 2Factor account/API key for passenger and bus-owner phone
 - The backend keeps only a short-lived resend/attempt record in D1.
 - Passenger and bus-owner flows use different `purpose` values so their rate limits and verification records remain separate while using the same 2Factor account.
 
-## 5. Redeploy
+## 5. Passenger account features
+
+- Login from the main header using mobile number + password.
+- Alternative OTP login by SMS.
+- Sign up using mobile number + SMS OTP + password.
+- Forgot password using SMS OTP and a new password.
+- Passwords are stored as PBKDF2-SHA-256 derived hashes with a unique random salt; the plain password is never stored.
+- Sessions use an HttpOnly, Secure, SameSite cookie.
+
+## 6. Redeploy
 
 After the D1 migration, R2 binding and encrypted secrets are ready, redeploy the Pages project.
 
