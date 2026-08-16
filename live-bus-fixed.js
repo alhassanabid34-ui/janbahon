@@ -1,0 +1,320 @@
+(() => {
+  const dateInput = document.getElementById("date");
+  const searchForm = document.getElementById("searchForm");
+  const fromInput = document.getElementById("from");
+  const toInput = document.getElementById("to");
+  const resultsSection = document.getElementById("bus-results");
+  const resultsList = document.getElementById("bus-results-list");
+  const resultsSummary = document.getElementById("results-summary");
+
+  let state = { bus: null, date: "", seats: [], passengers: [] };
+
+  const esc = value => String(value ?? "")
+    .replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;").replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+  const money = value => `₹${Number(value || 0).toLocaleString("en-IN")}`;
+  const formatDate = value => value ? new Date(`${value}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "";
+
+  function localDate() {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+  }
+
+  if (dateInput) {
+    dateInput.min = localDate();
+    if (!dateInput.value) dateInput.value = dateInput.min;
+  }
+
+  function normalizeBus(row) {
+    return {
+      id: row.bus_id ?? row.id,
+      operator: row.operator_name ?? row.operator ?? "Operator",
+      ownerName: row.owner_name ?? row.ownerName ?? "",
+      name: row.bus_name ?? row.name ?? "Bus",
+      type: row.bus_type ?? row.type ?? "",
+      price: Number(row.price || 0),
+      from: row.from_city ?? row.from ?? "",
+      to: row.to_city ?? row.to ?? "",
+      departure: row.departure ?? "",
+      arrival: row.arrival ?? "",
+      duration: row.duration ?? "",
+      seats: Number(row.total_seats ?? row.seats ?? 0)
+    };
+  }
+
+  async function api(url, options = {}) {
+    const response = await fetch(url, { cache: "no-store", ...options });
+    const text = await response.text();
+    let data;
+    try { data = JSON.parse(text); }
+    catch { throw new Error(`Server returned non-JSON data (${response.status}).`); }
+    if (!response.ok) throw new Error(data.error || `Request failed (${response.status}).`);
+    return data;
+  }
+
+  function injectStyles() {
+    if (document.getElementById("janbahon-live-styles")) return;
+    const style = document.createElement("style");
+    style.id = "janbahon-live-styles";
+    style.textContent = `
+      body.modal-open{overflow:hidden}
+      .booking-modal{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(6,31,67,.74);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:.2s;overflow:auto}
+      .booking-modal.open{opacity:1;pointer-events:auto}
+      .booking-box{position:relative;width:min(100%,860px);max-height:calc(100vh - 24px);overflow:auto;background:#fff;border-radius:26px;box-shadow:0 25px 80px rgba(0,0,0,.28);padding:30px}
+      .booking-close{position:absolute;top:14px;right:14px;width:42px;height:42px;border:0;border-radius:50%;background:#f0f3f7;color:#082b5c;font-size:25px;cursor:pointer}
+      .booking-head{text-align:center;padding:0 42px 20px}.booking-step{margin:0 0 7px;color:#f47b20;font-size:12px;font-weight:800;letter-spacing:2.5px}.booking-head h2{margin:0;color:#082b5c;font-size:30px}.booking-head p{margin:8px 0 0;color:#6d7788}
+      .seat-legend{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin:4px 0 18px;color:#6d7788;font-size:13px}.seat-legend span{display:flex;align-items:center;gap:6px}.legend{width:16px;height:16px;border-radius:5px;border:1px solid #d9e0e8;background:#fff}.legend.selected{background:#16824b;border-color:#16824b}.legend.booked{background:#d9dee6;border-color:#d9dee6}
+      .bus-layout{width:min(100%,410px);margin:auto;padding:17px;border:1px solid #dce2e9;border-radius:24px;background:#f8fafc}.driver{padding:10px;margin-bottom:17px;text-align:right;border-radius:10px;background:#e8edf3;color:#6d7788;font-size:11px;font-weight:800;letter-spacing:1px}.seat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}.seat{min-height:50px;border:2px solid #dfe5eb;border-radius:11px;background:#fff;color:#082b5c;font-weight:800;cursor:pointer}.seat:hover:not(:disabled){border-color:#16824b}.seat.selected{background:#16824b;border-color:#16824b;color:#fff}.seat.booked,.seat:disabled{background:#d9dee6;border-color:#d9dee6;color:#8b95a4;cursor:not-allowed}
+      .booking-summary{display:flex;justify-content:space-between;gap:15px;margin-top:18px;padding:17px 19px;background:#f5f7fa;border-radius:15px}.booking-summary span{display:block;color:#7b8798;font-size:12px;margin-bottom:3px}.booking-summary strong{color:#082b5c;font-size:16px}.booking-primary{width:100%;min-height:52px;margin-top:17px;border:0;border-radius:12px;background:#f47b20;color:#fff;font-weight:800;font-size:16px;cursor:pointer}.booking-primary:disabled{background:#cbd2db;cursor:not-allowed}
+      .passenger-list{display:grid;gap:13px}.passenger-card{padding:18px;border:1px solid #e1e6ed;border-radius:16px}.passenger-card-header{display:flex;justify-content:space-between;margin-bottom:14px}.passenger-card-header strong{color:#082b5c}.passenger-card-header span{padding:4px 9px;border-radius:99px;background:#fff4ea;color:#d96512;font-size:11px;font-weight:800}.passenger-fields{display:grid;grid-template-columns:1fr 1fr;gap:13px}.passenger-field{display:flex;flex-direction:column;gap:6px}.passenger-field label{font-size:12px;font-weight:800;color:#082b5c}.passenger-field input{min-height:47px;padding:0 12px;border:1px solid #dce2e9;border-radius:10px;outline:0}.same-number{display:flex;align-items:center;gap:7px;margin-top:10px;color:#536073;font-size:12px}.review-card{border:1px solid #e1e6ed;border-radius:18px;overflow:hidden}.review-section{padding:20px;border-bottom:1px solid #e7ebf0}.review-section:last-child{border-bottom:0}.review-section h3{margin:0 0 14px;color:#082b5c;font-size:16px}.review-route{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center}.review-place strong{display:block;color:#082b5c;font-size:18px}.review-place span{color:#6d7788;font-size:13px}.review-arrow{color:#f47b20;font-size:24px}.review-passenger{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eef1f4}.fare-row,.fare-total{display:flex;justify-content:space-between;padding:7px 0;color:#536073}.fare-total{margin-top:8px;padding-top:14px;border-top:1px solid #dfe4ea;color:#082b5c;font-size:20px;font-weight:800}.success-box{text-align:center;padding:18px}.success-icon{width:64px;height:64px;margin:0 auto 12px;display:grid;place-items:center;border-radius:50%;background:#e7f7ef;color:#16824b;font-size:30px;font-weight:900}.success-box h2{margin:0;color:#082b5c}.booking-id{display:inline-block;padding:9px 14px;border-radius:10px;background:#f5f7fa;color:#082b5c;font-weight:800;letter-spacing:1px}
+      .bus-owner-line{margin-top:5px;color:#7b8798;font-size:12px}.bus-owner-line strong{color:#082b5c}
+      .live-error{padding:14px;border-radius:12px;background:#fff0f0;color:#9b2c2c;text-align:center}
+      @media(max-width:700px){.booking-box{padding:22px 15px}.booking-head h2{font-size:25px}.passenger-fields{grid-template-columns:1fr}.review-route{grid-template-columns:1fr;text-align:center;gap:8px}.review-arrow{transform:rotate(90deg)}.booking-summary{flex-direction:column}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function closeModals() {
+    document.querySelectorAll(".booking-modal.live").forEach(m => m.classList.remove("open"));
+    document.body.classList.remove("modal-open");
+  }
+
+  function modal(id) {
+    let el = document.getElementById(id);
+    if (!el) {
+      el = document.createElement("div");
+      el.id = id;
+      el.className = "booking-modal live";
+      el.innerHTML = `<div class="booking-box"></div>`;
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+
+  async function searchBuses() {
+    const from = fromInput?.value || "";
+    const to = toInput?.value || "";
+    const date = dateInput?.value || "";
+    if (!from || !to || !date) return;
+    if (from === to) return alert("Origin and destination cannot be the same.");
+
+    resultsSummary.textContent = `${from} → ${to} • ${formatDate(date)} • Loading…`;
+    resultsList.innerHTML = `<div class="empty-results"><h3>Loading buses…</h3><p>Checking the live database.</p></div>`;
+
+    try {
+      const data = await api(`/api/buses?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&date=${encodeURIComponent(date)}`);
+      const buses = (data.buses || []).map(normalizeBus);
+      renderResults(buses, from, to, date);
+    } catch (error) {
+      resultsSummary.textContent = `${from} → ${to} • ${formatDate(date)}`;
+      resultsList.innerHTML = `<div class="live-error"><strong>Could not load buses</strong><br>${esc(error.message)}</div>`;
+    }
+    resultsSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function renderResults(buses, from, to, date) {
+    resultsList.innerHTML = "";
+    if (!buses.length) {
+      resultsSummary.textContent = `${from} → ${to} • ${formatDate(date)} • No buses found`;
+      resultsList.innerHTML = `<div class="empty-results"><h3>No buses found for this route</h3><p>Try another route or journey date.</p></div>`;
+      return;
+    }
+
+    resultsSummary.textContent = `${from} → ${to} • ${formatDate(date)} • ${buses.length} buses found`;
+    buses.forEach(bus => {
+      const card = document.createElement("article");
+      card.className = "bus-card";
+      card.innerHTML = `
+        <div class="bus-operator-block"><div class="bus-operator">${esc(bus.operator)}</div></div>
+        <div class="bus-info">
+          <h3>${esc(bus.name)}</h3>
+          <p class="bus-type">${esc(bus.type)}</p>
+          <p class="bus-price">${money(bus.price)} <span>per seat</span></p>
+          ${bus.ownerName ? `<p class="bus-owner-line">Owner: <strong>${esc(bus.ownerName)}</strong></p>` : ""}
+        </div>
+        <div class="bus-journey-line">
+          <div class="journey-point"><strong>${esc(bus.from)}</strong><span>${esc(bus.departure)}</span></div>
+          <div class="journey-track" aria-hidden="true"><span class="track-dot"></span><span class="track-line"></span><span class="bus-icon">▣</span><span class="track-line"></span><span class="track-dot"></span><small>${esc(bus.duration)}</small></div>
+          <div class="journey-point journey-arrival"><strong>${esc(bus.to)}</strong><span>${esc(bus.arrival)}</span></div>
+        </div>
+        <div class="bus-action"><span class="bus-seats">${bus.seats} seats</span><button class="book-seat" type="button">Book Seat</button></div>`;
+      card.querySelector(".book-seat").addEventListener("click", () => openSeatModal(bus, date));
+      resultsList.appendChild(card);
+    });
+
+    const note = document.createElement("p");
+    note.className = "bus-results-note";
+    note.textContent = "Operator and owner information comes from the live JANBAHON database.";
+    resultsList.appendChild(note);
+  }
+
+  async function openSeatModal(bus, date) {
+    injectStyles();
+    state = { bus, date, seats: [], passengers: [] };
+    const m = modal("live-seat-modal");
+    const box = m.querySelector(".booking-box");
+    box.innerHTML = `<button class="booking-close" type="button">×</button>
+      <div class="booking-head"><p class="booking-step">SELECT YOUR SEAT</p><h2>${esc(bus.name)}</h2><p>${esc(bus.operator)} • ${esc(bus.type)} • ${money(bus.price)} per seat</p></div>
+      <div class="seat-legend"><span><i class="legend"></i> Available</span><span><i class="legend selected"></i> Selected</span><span><i class="legend booked"></i> Unavailable</span></div>
+      <div class="bus-layout"><div class="driver">DRIVER</div><div id="live-seat-grid" class="seat-grid"><p>Loading live seats…</p></div></div>
+      <div class="booking-summary"><div><span>Selected Seats</span><strong id="live-seat-summary">None</strong></div><div><span>Total Fare</span><strong id="live-seat-total">₹0</strong></div></div>
+      <button class="booking-primary" id="live-seat-next" type="button" disabled>Continue</button>`;
+    m.classList.add("open");
+    document.body.classList.add("modal-open");
+    box.querySelector(".booking-close").onclick = closeModals;
+
+    try {
+      const data = await api(`/api/bookings?busId=${encodeURIComponent(bus.id)}&date=${encodeURIComponent(date)}`);
+      const unavailable = new Set([...(data.bookedSeats || []), ...(data.blockedSeats || [])].map(Number));
+      const totalSeats = Number(data.totalSeats || bus.seats);
+      const grid = box.querySelector("#live-seat-grid");
+      grid.innerHTML = Array.from({ length: totalSeats }, (_, i) => i + 1).map(n =>
+        `<button type="button" class="seat ${unavailable.has(n) ? "booked" : ""}" data-seat="${n}" ${unavailable.has(n) ? "disabled" : ""}>${n}</button>`
+      ).join("");
+
+      grid.querySelectorAll(".seat:not(.booked)").forEach(btn => btn.addEventListener("click", () => {
+        const n = Number(btn.dataset.seat);
+        if (state.seats.includes(n)) {
+          state.seats = state.seats.filter(s => s !== n);
+          btn.classList.remove("selected");
+        } else {
+          state.seats.push(n);
+          state.seats.sort((a, b) => a - b);
+          btn.classList.add("selected");
+        }
+        box.querySelector("#live-seat-summary").textContent = state.seats.join(", ") || "None";
+        box.querySelector("#live-seat-total").textContent = money(state.seats.length * bus.price);
+        box.querySelector("#live-seat-next").disabled = !state.seats.length;
+      }));
+    } catch (error) {
+      box.querySelector("#live-seat-grid").innerHTML = `<div class="live-error">${esc(error.message)}</div>`;
+    }
+
+    box.querySelector("#live-seat-next").onclick = () => { closeModals(); openPassengerModal(); };
+  }
+
+  function openPassengerModal() {
+    const m = modal("live-passenger-modal");
+    const box = m.querySelector(".booking-box");
+    box.innerHTML = `<button class="booking-close" type="button">×</button>
+      <div class="booking-head"><p class="booking-step">PASSENGER DETAILS</p><h2>Who is travelling?</h2><p>Enter details for each selected seat.</p></div>
+      <div class="passenger-list">${state.seats.map((seat, i) => `<div class="passenger-card" data-index="${i}">
+        <div class="passenger-card-header"><strong>Passenger ${i + 1}</strong><span>Seat ${seat}</span></div>
+        <div class="passenger-fields"><div class="passenger-field"><label>FULL NAME</label><input class="p-name" placeholder="Enter full name"></div><div class="passenger-field"><label>WHATSAPP NUMBER</label><input class="p-phone" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"></div></div>
+        ${i > 0 ? `<label class="same-number"><input class="same-check" type="checkbox"> Use same WhatsApp number as Passenger 1</label>` : ""}
+      </div>`).join("")}</div>
+      <button class="booking-primary" id="live-passenger-next" type="button">Review Booking</button>`;
+    m.classList.add("open");
+    document.body.classList.add("modal-open");
+    box.querySelector(".booking-close").onclick = () => { closeModals(); openSeatModal(state.bus, state.date); };
+
+    const sync = () => {
+      const cards = [...box.querySelectorAll(".passenger-card")];
+      state.passengers = cards.map((card, i) => ({
+        seat: state.seats[i],
+        name: card.querySelector(".p-name").value.trim(),
+        whatsapp: card.querySelector(".p-phone").value.replace(/\D/g, "").slice(0, 10)
+      }));
+      cards.forEach((card, i) => {
+        const check = card.querySelector(".same-check");
+        const phone = card.querySelector(".p-phone");
+        if (check?.checked && state.passengers[0]) {
+          phone.value = state.passengers[0].whatsapp;
+          phone.disabled = true;
+          state.passengers[i].whatsapp = state.passengers[0].whatsapp;
+        } else if (phone) phone.disabled = false;
+      });
+    };
+
+    box.querySelectorAll("input").forEach(input => input.addEventListener("input", sync));
+    box.querySelectorAll(".same-check").forEach(input => input.addEventListener("change", sync));
+    box.querySelector("#live-passenger-next").onclick = () => {
+      sync();
+      if (state.passengers.some(p => p.name.length < 2 || !/^\d{10}$/.test(p.whatsapp))) {
+        alert("Please enter a valid name and 10-digit WhatsApp number for every passenger.");
+        return;
+      }
+      closeModals();
+      openReviewModal();
+    };
+  }
+
+  function openReviewModal() {
+    const m = modal("live-review-modal");
+    const box = m.querySelector(".booking-box");
+    const bus = state.bus;
+    const total = state.seats.length * bus.price;
+    box.innerHTML = `<button class="booking-close" type="button">×</button>
+      <div class="booking-head"><p class="booking-step">BOOKING REVIEW</p><h2>Review your journey</h2><p>${esc(formatDate(state.date))}</p></div>
+      <div class="review-card"><div class="review-section"><h3>Journey</h3><div class="review-route"><div class="review-place"><strong>${esc(bus.from)}</strong><span>${esc(bus.departure)}</span></div><div class="review-arrow">→</div><div class="review-place"><strong>${esc(bus.to)}</strong><span>${esc(bus.arrival)}</span></div></div><p>${esc(bus.operator)} • ${esc(bus.name)}${bus.ownerName ? ` • Owner: ${esc(bus.ownerName)}` : ""}</p></div>
+      <div class="review-section"><h3>Passengers</h3>${state.passengers.map(p => `<div class="review-passenger"><strong>Seat ${p.seat} • ${esc(p.name)}</strong><span>+91 ${p.whatsapp}</span></div>`).join("")}</div>
+      <div class="review-section"><h3>Fare Summary</h3><div class="fare-row"><span>${state.seats.length} seat(s)</span><strong>${money(total)}</strong></div><div class="fare-total"><span>Total</span><span>${money(total)}</span></div></div></div>
+      <button class="booking-primary" id="live-pay" type="button">Proceed to Payment • ${money(total)}</button>`;
+    m.classList.add("open");
+    document.body.classList.add("modal-open");
+    box.querySelector(".booking-close").onclick = () => { closeModals(); openPassengerModal(); };
+    box.querySelector("#live-pay").onclick = openPaymentModal;
+  }
+
+  function openPaymentModal() {
+    const m = modal("live-payment-modal");
+    const box = m.querySelector(".booking-box");
+    const total = state.seats.length * state.bus.price;
+    box.innerHTML = `<button class="booking-close" type="button">×</button>
+      <div class="booking-head"><p class="booking-step">SECURE PAYMENT</p><h2>Complete your payment</h2><p>Total payable: <strong>${money(total)}</strong></p></div>
+      <div class="payment-panel" style="padding:18px;background:#f6f8fb;border-radius:15px"><label>UPI ID</label><input id="demo-upi" placeholder="example@upi" style="width:100%;height:47px;padding:0 12px;border:1px solid #dce2e9;border-radius:10px"><p style="color:#6d7788;font-size:12px">Demo payment only. No real money will be charged.</p></div>
+      <button class="booking-primary" id="live-confirm" type="button">Pay & Confirm</button>`;
+    m.classList.add("open");
+    document.body.classList.add("modal-open");
+    box.querySelector(".booking-close").onclick = closeModals;
+    box.querySelector("#live-confirm").onclick = saveBooking;
+  }
+
+  async function saveBooking() {
+    const button = document.querySelector("#live-payment-modal.open #live-confirm");
+    if (!button) return;
+    button.disabled = true;
+    button.textContent = "Saving booking…";
+    try {
+      const data = await api("/api/bookings", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ busId: state.bus.id, journeyDate: state.date, passengers: state.passengers, paymentStatus: "demo" })
+      });
+      showSuccess(data);
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = "Try Again";
+      const message = error.message.includes("just booked") ? `${error.message} Please return to the seat map.` : error.message;
+      alert(message);
+    }
+  }
+
+  function showSuccess(result) {
+    const m = document.getElementById("live-payment-modal");
+    const box = m.querySelector(".booking-box");
+    box.innerHTML = `<div class="success-box"><div class="success-icon">✓</div><h2>Booking Confirmed</h2><p>Your reservation has been saved.</p><span class="booking-id">${esc(result.bookingId)}</span></div>
+      <div class="review-card" style="margin-top:15px"><div class="review-section"><div class="fare-row"><span>Operator</span><strong>${esc(state.bus.operator)}</strong></div><div class="fare-row"><span>Owner</span><strong>${esc(state.bus.ownerName || "—")}</strong></div><div class="fare-row"><span>Bus</span><strong>${esc(state.bus.name)}</strong></div><div class="fare-row"><span>Journey date</span><strong>${esc(state.date)}</strong></div><div class="fare-row"><span>Seats</span><strong>${state.seats.join(", ")}</strong></div><div class="fare-row"><span>Amount</span><strong>${money(result.totalAmount)}</strong></div></div></div>
+      <button class="booking-primary" id="live-done" type="button">Done</button>`;
+    box.querySelector("#live-done").onclick = () => { closeModals(); searchBuses(); };
+  }
+
+  searchForm?.addEventListener("submit", event => { event.preventDefault(); searchBuses(); });
+  document.getElementById("swap")?.addEventListener("click", () => {
+    const from = fromInput.value;
+    fromInput.value = toInput.value;
+    toInput.value = from;
+  });
+  document.querySelectorAll(".route-card").forEach(card => card.addEventListener("click", () => {
+    fromInput.value = card.dataset.from || "";
+    toInput.value = card.dataset.to || "";
+    if (!dateInput.value) dateInput.value = dateInput.min;
+    searchBuses();
+  }));
+
+  injectStyles();
+  window.searchBuses = searchBuses;
+})();
