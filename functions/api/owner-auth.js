@@ -1,3 +1,5 @@
+import { sendOtp, verifyOtp } from "../lib/otp.js";
+
 const SESSION_COOKIE = "jb_owner_session";
 const SESSION_DAYS = 7;
 
@@ -6,13 +8,6 @@ function json(data, status = 200, extraHeaders = {}) {
     status,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...extraHeaders }
   });
-}
-
-function normalizeMobile(value) {
-  const digits = String(value || "").replace(/\D/g, "");
-  if (digits.length === 10) return `+91${digits}`;
-  if (digits.length === 12 && digits.startsWith("91")) return `+${digits}`;
-  return "";
 }
 
 function b64url(bytes) {
@@ -65,22 +60,6 @@ function sessionCookie(value) {
   return `${SESSION_COOKIE}=${value}; Path=/; Max-Age=${SESSION_DAYS * 86400}; HttpOnly; Secure; SameSite=Lax`;
 }
 
-async function twilioRequest(env, path, params) {
-  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_VERIFY_SERVICE_SID } = env;
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_VERIFY_SERVICE_SID) {
-    throw new Error("OTP service is not configured. Add the Twilio Verify secrets first.");
-  }
-  const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-  const response = await fetch(`https://verify.twilio.com/v2/Services/${TWILIO_VERIFY_SERVICE_SID}/${path}`, {
-    method: "POST",
-    headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(params)
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data?.message || "OTP service request failed.");
-  return data;
-}
-
 function requireDb(env) {
   if (!env.DB) throw new Error("D1 database is not bound yet.");
 }
@@ -127,19 +106,16 @@ export async function onRequestPost({ request, env }) {
 
     if (action === "send-otp") {
       const body = await request.json();
-      const mobile = normalizeMobile(body?.mobile);
-      if (!mobile) return json({ error: "Enter a valid 10-digit Indian mobile number." }, 400);
-      await twilioRequest(env, "Verifications", { To: mobile, Channel: "sms" });
-      return json({ success: true, mobile });
+      const result = await sendOtp(env, body?.mobile, "owner_login");
+      if (!result.success) return json({ error: result.error }, result.status || 400);
+      return json({ success: true, mobile: result.mobile });
     }
 
     if (action === "verify-otp") {
       const body = await request.json();
-      const mobile = normalizeMobile(body?.mobile);
-      const code = String(body?.code || "").replace(/\D/g, "").slice(0, 10);
-      if (!mobile || code.length < 4) return json({ error: "Mobile number and OTP are required." }, 400);
-      const result = await twilioRequest(env, "VerificationCheck", { To: mobile, Code: code });
-      if (result.status !== "approved") return json({ error: "Incorrect or expired OTP." }, 401);
+      const result = await verifyOtp(env, body?.mobile, "owner_login", body?.code);
+      if (!result.success) return json({ error: result.error }, result.status || 400);
+      const mobile = result.mobile;
       const owner = await env.DB.prepare("SELECT owner_id, full_name, business_name, status FROM owners WHERE mobile = ?").bind(mobile).first();
       const token = await makeSession(mobile, env.OWNER_AUTH_SECRET, !owner);
       return json({ success: true, registered: !!owner, owner: owner || null }, 200, { "Set-Cookie": sessionCookie(token) });
