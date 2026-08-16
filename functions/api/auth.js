@@ -48,8 +48,12 @@ async function verifyPassword(password, saltB64, expectedHash) {
   return timingSafeEqual(actual, expectedHash);
 }
 
+function authSecret(env) {
+  return env.USER_AUTH_SECRET || env.OWNER_AUTH_SECRET || "";
+}
+
 async function makeSession(mobile, secret) {
-  if (!secret) throw new Error("USER_AUTH_SECRET is not configured.");
+  if (!secret) throw new Error("USER_AUTH_SECRET is not configured. Add it as an encrypted secret.");
   const payload = JSON.stringify({ mobile, exp: Date.now() + SESSION_DAYS * 86400000 });
   const body = b64(new TextEncoder().encode(payload)).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
@@ -90,6 +94,20 @@ function passwordError(password) {
   return "";
 }
 
+async function ensureSchema(env) {
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS users (
+    user_id TEXT PRIMARY KEY,
+    mobile TEXT NOT NULL UNIQUE,
+    full_name TEXT NOT NULL DEFAULT '',
+    password_hash TEXT,
+    password_salt TEXT,
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`).run();
+  await env.DB.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_mobile ON users(mobile)").run();
+}
+
 async function createUser(env, mobile, fullName, password) {
   const existing = await env.DB.prepare("SELECT user_id FROM users WHERE mobile = ?").bind(mobile).first();
   if (existing) return { error: "An account with this mobile number already exists.", status: 409 };
@@ -107,7 +125,8 @@ async function createUser(env, mobile, fullName, password) {
 export async function onRequestGet({ request, env }) {
   try {
     if (!env.DB) throw new Error("D1 database is not bound yet.");
-    const session = await readSession(request, env.USER_AUTH_SECRET);
+    await ensureSchema(env);
+    const session = await readSession(request, authSecret(env));
     if (!session) return json({ authenticated: false, user: null });
     const user = await env.DB.prepare("SELECT user_id, mobile, full_name, status, created_at FROM users WHERE mobile = ?").bind(session.mobile).first();
     if (!user || user.status !== "active") return json({ authenticated: false, user: null });
@@ -120,6 +139,7 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestPost({ request, env }) {
   try {
     if (!env.DB) throw new Error("D1 database is not bound yet.");
+    await ensureSchema(env);
     const url = new URL(request.url);
     const action = url.searchParams.get("action");
     const body = request.headers.get("content-type")?.includes("application/json") ? await request.json() : {};
@@ -148,7 +168,7 @@ export async function onRequestPost({ request, env }) {
       if (passError) return json({ error: passError }, 400);
       const created = await createUser(env, result.mobile, body?.fullName, body?.password);
       if (created.error) return json({ error: created.error }, created.status);
-      const token = await makeSession(result.mobile, env.USER_AUTH_SECRET);
+      const token = await makeSession(result.mobile, authSecret(env));
       return json({ success: true, registered: true, userId: created.userId }, 200, { "Set-Cookie": sessionCookie(token) });
     }
 
@@ -157,7 +177,7 @@ export async function onRequestPost({ request, env }) {
       const user = await env.DB.prepare("SELECT user_id, mobile, full_name, password_hash, password_salt, status FROM users WHERE mobile = ?").bind(mobile).first();
       if (!user || user.status !== "active") return json({ error: "Invalid mobile number or password." }, 401);
       if (!await verifyPassword(body.password, user.password_salt, user.password_hash)) return json({ error: "Invalid mobile number or password." }, 401);
-      const token = await makeSession(mobile, env.USER_AUTH_SECRET);
+      const token = await makeSession(mobile, authSecret(env));
       return json({ success: true, user: { user_id: user.user_id, mobile: user.mobile, full_name: user.full_name } }, 200, { "Set-Cookie": sessionCookie(token) });
     }
 
@@ -166,7 +186,7 @@ export async function onRequestPost({ request, env }) {
       if (!result.success) return json({ error: result.error }, result.status || 400);
       const user = await env.DB.prepare("SELECT user_id, mobile, full_name, status FROM users WHERE mobile = ?").bind(result.mobile).first();
       if (!user || user.status !== "active") return json({ error: "No active account was found for this mobile number. Please sign up first." }, 404);
-      const token = await makeSession(result.mobile, env.USER_AUTH_SECRET);
+      const token = await makeSession(result.mobile, authSecret(env));
       return json({ success: true, user }, 200, { "Set-Cookie": sessionCookie(token) });
     }
 
@@ -180,7 +200,7 @@ export async function onRequestPost({ request, env }) {
       const updated = await env.DB.prepare("UPDATE users SET password_hash = ?, password_salt = ?, updated_at = ? WHERE mobile = ?")
         .bind(hash, b64(salt), new Date().toISOString(), result.mobile).run();
       if (!updated.meta?.changes) return json({ error: "Account not found." }, 404);
-      const token = await makeSession(result.mobile, env.USER_AUTH_SECRET);
+      const token = await makeSession(result.mobile, authSecret(env));
       return json({ success: true, passwordReset: true }, 200, { "Set-Cookie": sessionCookie(token) });
     }
 
