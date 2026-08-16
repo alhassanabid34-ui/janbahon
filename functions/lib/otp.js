@@ -1,6 +1,5 @@
-const OTP_TTL_MS = 5 * 60 * 1000;
 const RESEND_MS = 60 * 1000;
-const MAX_ATTEMPTS = 5;
+const OTP_TEMPLATE = "JNBHN1";
 
 function normalizeMobile(value) {
   const digits = String(value || "").replace(/\D/g, "");
@@ -13,51 +12,49 @@ function jsonError(message, status = 400) {
   return { error: message, status };
 }
 
-async function sha256Hex(value) {
-  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
-  return [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-function randomOtp() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+async function getJson(response) {
+  const text = await response.text();
+  try { return JSON.parse(text); } catch { return {}; }
 }
 
 export async function sendOtp(env, mobile, purpose) {
   const normalized = normalizeMobile(mobile);
   if (!normalized) return jsonError("Enter a valid 10-digit Indian mobile number.");
-  if (!env.TWOFACTOR_API_KEY) return jsonError("2Factor OTP is not configured. Add TWOFACTOR_API_KEY in Cloudflare Secrets.", 500);
+  if (!env.TWOFACTOR_API_KEY) return jsonError("2Factor OTP is not configured. Add TWOFACTOR_API_KEY as an encrypted secret.", 500);
 
   const now = Date.now();
-  const existing = await env.DB.prepare(
-    "SELECT last_sent_at FROM otp_codes WHERE mobile = ? AND purpose = ?"
-  ).bind(normalized, purpose).first();
-
-  if (existing?.last_sent_at && now - Number(existing.last_sent_at) < RESEND_MS) {
-    return jsonError("Please wait 60 seconds before requesting another OTP.", 429);
+  if (env.DB) {
+    const existing = await env.DB.prepare(
+      "SELECT last_sent_at FROM otp_codes WHERE mobile = ? AND purpose = ?"
+    ).bind(normalized, purpose).first();
+    if (existing?.last_sent_at && now - Number(existing.last_sent_at) < RESEND_MS) {
+      return jsonError("Please wait 60 seconds before requesting another OTP.", 429);
+    }
   }
 
-  const otp = randomOtp();
-  const response = await fetch(
-    `https://2factor.in/API/V1/${encodeURIComponent(env.TWOFACTOR_API_KEY)}/SMS/${encodeURIComponent(normalized)}/${otp}`,
-    { method: "POST" }
-  );
-  const text = await response.text();
-  let data = {};
-  try { data = JSON.parse(text); } catch {}
-  if (!response.ok || (data.Status && String(data.Status).toLowerCase() !== "success")) {
-    throw new Error(data.Details || data.message || "2Factor could not send the OTP.");
+  const template = env.TWOFACTOR_OTP_TEMPLATE || OTP_TEMPLATE;
+  const endpoint = `https://2factor.in/API/V1/${encodeURIComponent(env.TWOFACTOR_API_KEY)}/SMS/${encodeURIComponent(normalized)}/AUTOGEN/${encodeURIComponent(template)}`;
+  const response = await fetch(endpoint, { method: "GET", headers: { "accept": "application/json" } });
+  const data = await getJson(response);
+  const status = String(data?.Status || "").toLowerCase();
+
+  if (!response.ok || status !== "success") {
+    throw new Error(data?.Details || data?.message || "2Factor could not send the OTP.");
   }
 
-  const otpHash = await sha256Hex(`${normalized}:${purpose}:${otp}`);
-  await env.DB.prepare(
-    `INSERT INTO otp_codes (mobile, purpose, otp_hash, expires_at, attempts, last_sent_at)
-     VALUES (?, ?, ?, ?, 0, ?)
-     ON CONFLICT(mobile, purpose) DO UPDATE SET
-       otp_hash = excluded.otp_hash,
-       expires_at = excluded.expires_at,
-       attempts = 0,
-       last_sent_at = excluded.last_sent_at`
-  ).bind(normalized, purpose, otpHash, now + OTP_TTL_MS, now).run();
+  // 2Factor generates and verifies the OTP. We only keep a resend timestamp;
+  // the OTP itself is never stored in JanBahon.
+  if (env.DB) {
+    await env.DB.prepare(
+      `INSERT INTO otp_codes (mobile, purpose, otp_hash, expires_at, attempts, last_sent_at)
+       VALUES (?, ?, '2factor', ?, 0, ?)
+       ON CONFLICT(mobile, purpose) DO UPDATE SET
+         otp_hash = '2factor',
+         expires_at = excluded.expires_at,
+         attempts = 0,
+         last_sent_at = excluded.last_sent_at`
+    ).bind(normalized, purpose, now + 5 * 60 * 1000, now).run();
+  }
 
   return { success: true, mobile: normalized };
 }
@@ -66,23 +63,37 @@ export async function verifyOtp(env, mobile, purpose, code) {
   const normalized = normalizeMobile(mobile);
   const cleanCode = String(code || "").replace(/\D/g, "").slice(0, 6);
   if (!normalized || cleanCode.length !== 6) return jsonError("Mobile number and 6-digit OTP are required.");
+  if (!env.TWOFACTOR_API_KEY) return jsonError("2Factor OTP is not configured. Add TWOFACTOR_API_KEY as an encrypted secret.", 500);
 
-  const row = await env.DB.prepare(
-    "SELECT otp_hash, expires_at, attempts FROM otp_codes WHERE mobile = ? AND purpose = ?"
-  ).bind(normalized, purpose).first();
-
-  if (!row) return jsonError("OTP not found. Please request a new OTP.", 401);
-  if (Number(row.expires_at) < Date.now()) return jsonError("OTP expired. Please request a new OTP.", 401);
-  if (Number(row.attempts) >= MAX_ATTEMPTS) return jsonError("Too many incorrect attempts. Please request a new OTP.", 429);
-
-  const expected = await sha256Hex(`${normalized}:${purpose}:${cleanCode}`);
-  if (expected !== row.otp_hash) {
-    await env.DB.prepare("UPDATE otp_codes SET attempts = attempts + 1 WHERE mobile = ? AND purpose = ?").bind(normalized, purpose).run();
-    return jsonError("Incorrect OTP.", 401);
+  if (env.DB) {
+    const row = await env.DB.prepare(
+      "SELECT expires_at, attempts FROM otp_codes WHERE mobile = ? AND purpose = ?"
+    ).bind(normalized, purpose).first();
+    if (!row) return jsonError("OTP not found. Please request a new OTP.", 401);
+    if (Number(row.expires_at) < Date.now()) return jsonError("OTP expired. Please request a new OTP.", 401);
+    if (Number(row.attempts) >= 5) return jsonError("Too many incorrect attempts. Please request a new OTP.", 429);
   }
 
-  await env.DB.prepare("DELETE FROM otp_codes WHERE mobile = ? AND purpose = ?").bind(normalized, purpose).run();
-  return { success: true, mobile: normalized };
+  const endpoint = `https://2factor.in/API/V1/${encodeURIComponent(env.TWOFACTOR_API_KEY)}/SMS/VERIFY3/${encodeURIComponent(normalized)}/${encodeURIComponent(cleanCode)}`;
+  const response = await fetch(endpoint, { method: "GET", headers: { "accept": "application/json" } });
+  const data = await getJson(response);
+  const status = String(data?.Status || "").toLowerCase();
+  const details = String(data?.Details || "").toLowerCase();
+
+  if (!response.ok || status !== "success") {
+    if (env.DB) {
+      await env.DB.prepare("UPDATE otp_codes SET attempts = attempts + 1 WHERE mobile = ? AND purpose = ?")
+        .bind(normalized, purpose).run();
+    }
+    return jsonError(data?.Details || "Incorrect OTP.", 401);
+  }
+
+  if (env.DB) {
+    await env.DB.prepare("DELETE FROM otp_codes WHERE mobile = ? AND purpose = ?")
+      .bind(normalized, purpose).run();
+  }
+
+  return { success: true, mobile: normalized, details };
 }
 
 export { normalizeMobile };
