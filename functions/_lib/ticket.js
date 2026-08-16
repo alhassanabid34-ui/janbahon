@@ -57,7 +57,7 @@ export async function buildTicketPdf(ticket) {
   y -= 35;
   page.drawRectangle({ x: 35, y: y - 155, width: width - 70, height: 170, color: rgb(1, 1, 1), borderColor: NAVY, borderWidth: 1.2 });
   page.drawRectangle({ x: 35, y: y - 15, width: width - 70, height: 28, color: NAVY });
-  page.drawText("BUS DETAILS", { x: 50, y - 4, size: 12, font: bold, color: rgb(1, 1, 1) });
+  page.drawText("BUS DETAILS", { x: 50, y: y - 4, size: 12, font: bold, color: rgb(1, 1, 1) });
   y -= 38;
   const busRows = [
     ["Bus name", safe(ticket.busName)],
