@@ -16,8 +16,8 @@
       <a href="#routes">Popular Routes</a>
       <a href="#bus-results">Available Buses</a>
       <a href="#help">Help</a>
-      <a href="#login" data-passenger-auth="login">Login</a>
-      <a class="signup" href="#signup" data-passenger-auth="signup">Sign Up</a>
+      <a href="#login" data-passenger-auth="login" id="jbPassengerLogin">Login</a>
+      <a class="signup" href="#signup" data-passenger-auth="signup" id="jbPassengerSignup">Sign Up</a>
     </nav>
   </header>
   <main>
@@ -31,32 +31,39 @@
   </main>
   <footer id="help"><div><strong>JANBAHON</strong><span>Bus booking for Assam &amp; Northeast India.</span></div><a href="/owner.html" class="owner-footer-link">Bus Owner Login / Register</a></footer>
   <script src="live-bus-fixed.js?v=20260816-5"></script>
-  <script src="passenger-auth.js?v=20260816-2"></script>
+  <script src="passenger-auth.js?v=20260816-100"></script>
   <script>
-    // Robust passenger-auth launcher: bind the header directly as well as the
-    // delegated handler inside passenger-auth.js. This prevents clicks from
-    // being lost if another navigation script intercepts the event.
+    // Passenger authentication launcher. This is deliberately independent of
+    // the bus-booking scripts so Login/Sign Up always respond to a click.
     (() => {
-      const bindPassengerAuth = () => {
-        const links = document.querySelectorAll('[data-passenger-auth]');
-        links.forEach(link => {
-          if (link.dataset.jbAuthBound === '1') return;
-          link.dataset.jbAuthBound = '1';
-          link.addEventListener('click', event => {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            const mode = link.dataset.passengerAuth || 'login';
-            if (window.JanbahonPassengerAuth?.open) {
-              window.JanbahonPassengerAuth.open(mode);
-            } else {
-              // Retry once after the auth bundle has had time to initialise.
-              setTimeout(() => window.JanbahonPassengerAuth?.open?.(mode), 50);
-            }
-          }, true);
-        });
-      };
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindPassengerAuth);
-      else bindPassengerAuth();
+      function bind() {
+        const login = document.getElementById('jbPassengerLogin');
+        const signup = document.getElementById('jbPassengerSignup');
+        const open = mode => {
+          if (window.JanbahonPassengerAuth && typeof window.JanbahonPassengerAuth.open === 'function') {
+            window.JanbahonPassengerAuth.open(mode);
+            return true;
+          }
+          return false;
+        };
+        if (login && login.dataset.authBound !== '1') {
+          login.dataset.authBound = '1';
+          login.addEventListener('click', e => {
+            e.preventDefault();
+            if (!open('login')) setTimeout(() => open('login'), 150);
+          }, false);
+        }
+        if (signup && signup.dataset.authBound !== '1') {
+          signup.dataset.authBound = '1';
+          signup.addEventListener('click', e => {
+            e.preventDefault();
+            if (!open('signup')) setTimeout(() => open('signup'), 150);
+          }, false);
+        }
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+      else bind();
+      setTimeout(bind, 500);
     })();
   </script>
 </body>
