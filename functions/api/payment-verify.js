@@ -31,6 +31,25 @@ async function loadTicket(db, bookingId) {
   return { ...booking, passengers: passengers.results || [], whatsapp: passengers.results?.[0]?.whatsapp || "" };
 }
 
+function normalizeTicket(ticket) {
+  return {
+    bookingId: ticket.booking_id,
+    journeyDate: ticket.journey_date,
+    amount: ticket.total_amount,
+    passengers: ticket.passengers || [],
+    whatsapp: ticket.whatsapp || "",
+    operator: ticket.operator,
+    ownerName: ticket.owner_name,
+    busName: ticket.bus_name,
+    busType: ticket.bus_type,
+    fromCity: ticket.from_city,
+    toCity: ticket.to_city,
+    departure: ticket.departure,
+    arrival: ticket.arrival,
+    duration: ticket.duration
+  };
+}
+
 export async function onRequestPost({ request, env }) {
   if (!env.DB) return json({ error: "D1 database is not bound." }, 503);
   if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) return json({ error: "Razorpay is not configured yet." }, 503);
@@ -71,11 +90,13 @@ export async function onRequestPost({ request, env }) {
 
     const ticket = await loadTicket(env.DB, attempt.booking_id);
     if (!ticket) { await refundPayment(env, paymentId, attempt.amount); return json({ error: "Booking record could not be loaded after payment. Refund initiated." }, 500); }
-    const pdf = await buildTicketPdf({ bookingId: ticket.booking_id, journeyDate: ticket.journey_date, amount: ticket.total_amount, passengers: ticket.passengers, operator: ticket.operator, ownerName: ticket.owner_name, busName: ticket.bus_name, busType: ticket.bus_type, fromCity: ticket.from_city, toCity: ticket.to_city, departure: ticket.departure, arrival: ticket.arrival, duration: ticket.duration });
+
+    const normalizedTicket = normalizeTicket(ticket);
+    const pdf = await buildTicketPdf(normalizedTicket);
 
     let whatsapp = { sent: false, skipped: true, reason: "Not configured." };
-    try { whatsapp = await sendBookingWhatsApp(env, ticket, pdf); } catch (error) { console.error("WhatsApp ticket delivery failed", error); whatsapp = { sent: false, skipped: false, reason: String(error?.message || error) }; }
-    return json({ success: true, bookingId: ticket.booking_id, totalAmount: ticket.total_amount, paymentStatus: "paid", whatsappSent: Boolean(whatsapp.sent), whatsappReason: whatsapp.reason || "" });
+    try { whatsapp = await sendBookingWhatsApp(env, normalizedTicket, pdf); } catch (error) { console.error("WhatsApp ticket delivery failed", error); whatsapp = { sent: false, skipped: false, reason: String(error?.message || error) }; }
+    return json({ success: true, bookingId: normalizedTicket.bookingId, totalAmount: normalizedTicket.amount, paymentStatus: "paid", whatsappSent: Boolean(whatsapp.sent), whatsappReason: whatsapp.reason || "" });
   } catch (error) {
     console.error("Payment verification error", error);
     return json({ error: "Payment was received but booking confirmation could not be completed. Please contact JANBAHON support." }, 500);
