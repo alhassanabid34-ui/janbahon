@@ -30,52 +30,34 @@ async function loadTicket(db, bookingId) {
   const passengers = await db.prepare(`SELECT seat_number AS seat,name,whatsapp FROM passengers WHERE booking_id=? ORDER BY seat_number`).bind(bookingId).all();
   return { ...booking, passengers: passengers.results || [], whatsapp: passengers.results?.[0]?.whatsapp || "" };
 }
-
 function normalizeTicket(ticket) {
-  return {
-    bookingId: ticket.booking_id,
-    journeyDate: ticket.journey_date,
-    amount: ticket.total_amount,
-    passengers: ticket.passengers || [],
-    whatsapp: ticket.whatsapp || "",
-    operator: ticket.operator,
-    ownerName: ticket.owner_name,
-    busName: ticket.bus_name,
-    busType: ticket.bus_type,
-    fromCity: ticket.from_city,
-    toCity: ticket.to_city,
-    departure: ticket.departure,
-    arrival: ticket.arrival,
-    duration: ticket.duration
-  };
+  return { bookingId: ticket.booking_id, journeyDate: ticket.journey_date, amount: ticket.total_amount, passengers: ticket.passengers || [], whatsapp: ticket.whatsapp || "", operator: ticket.operator, ownerName: ticket.owner_name, busName: ticket.bus_name, busType: ticket.bus_type, fromCity: ticket.from_city, toCity: ticket.to_city, departure: ticket.departure, arrival: ticket.arrival, duration: ticket.duration };
 }
-
 export async function onRequestPost({ request, env }) {
   if (!env.DB) return json({ error: "D1 database is not bound." }, 503);
   if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) return json({ error: "Razorpay is not configured yet." }, 503);
   let body; try { body = await request.json(); } catch { return json({ error: "Invalid JSON." }, 400); }
   const paymentId = String(body?.razorpay_payment_id || ""), orderIdFromClient = String(body?.razorpay_order_id || ""), signature = String(body?.razorpay_signature || "");
   if (!paymentId || !orderIdFromClient || !signature) return json({ error: "Payment verification details are incomplete." }, 400);
-
   try {
     await ensurePaymentTables(env.DB);
     const attempt = await env.DB.prepare(`SELECT * FROM payment_attempts WHERE razorpay_order_id=?`).bind(orderIdFromClient).first();
     if (!attempt) return json({ error: "Payment order not found." }, 404);
-    if (attempt.status === "paid") { const ticket = await loadTicket(env.DB, attempt.booking_id); return json({ success: true, alreadyProcessed: true, bookingId: attempt.booking_id, totalAmount: ticket?.total_amount || attempt.amount, whatsappSent: true }); }
+    if (attempt.status === "paid") {
+      const ticket = await loadTicket(env.DB, attempt.booking_id);
+      return json({ success: true, alreadyProcessed: true, bookingId: attempt.booking_id, totalAmount: ticket?.total_amount || attempt.amount, whatsappSent: null, whatsappStatus: "already_processed" });
+    }
     if (!await verifySignature(attempt.razorpay_order_id, paymentId, signature, env.RAZORPAY_KEY_SECRET)) return json({ error: "Payment verification failed." }, 400);
-
     let payment = await razorpay(env, `/payments/${encodeURIComponent(paymentId)}`);
     if (payment.order_id && payment.order_id !== attempt.razorpay_order_id) return json({ error: "Payment order mismatch." }, 400);
     if (Number(payment.amount) !== Number(attempt.amount) * 100) return json({ error: "Payment amount mismatch." }, 400);
     if (payment.status === "authorized") payment = await razorpay(env, `/payments/${encodeURIComponent(paymentId)}/capture`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ amount: Number(attempt.amount) * 100, currency: "INR" }) });
     if (payment.status !== "captured") return json({ error: `Payment is not captured yet (${payment.status || "unknown"}). Please retry.` }, 409);
-
     const booking = await env.DB.prepare(`SELECT booking_id FROM bookings WHERE booking_id=? AND payment_status='pending'`).bind(attempt.booking_id).first();
     if (!booking) {
       await refundPayment(env, paymentId, attempt.amount);
       return json({ error: "The seat reservation expired before payment confirmation. The captured payment has been sent for refund." }, 409);
     }
-
     try {
       await env.DB.batch([
         env.DB.prepare(`UPDATE bookings SET payment_status='paid' WHERE booking_id=?`).bind(attempt.booking_id),
@@ -87,13 +69,10 @@ export async function onRequestPost({ request, env }) {
       await refundPayment(env, paymentId, attempt.amount);
       throw error;
     }
-
     const ticket = await loadTicket(env.DB, attempt.booking_id);
     if (!ticket) { await refundPayment(env, paymentId, attempt.amount); return json({ error: "Booking record could not be loaded after payment. Refund initiated." }, 500); }
-
     const normalizedTicket = normalizeTicket(ticket);
     const pdf = await buildTicketPdf(normalizedTicket);
-
     let whatsapp = { sent: false, skipped: true, reason: "Not configured." };
     try { whatsapp = await sendBookingWhatsApp(env, normalizedTicket, pdf); } catch (error) { console.error("WhatsApp ticket delivery failed", error); whatsapp = { sent: false, skipped: false, reason: String(error?.message || error) }; }
     return json({ success: true, bookingId: normalizedTicket.bookingId, totalAmount: normalizedTicket.amount, paymentStatus: "paid", whatsappSent: Boolean(whatsapp.sent), whatsappReason: whatsapp.reason || "" });

@@ -1,5 +1,5 @@
 const RESEND_MS = 60 * 1000;
-const OTP_TEMPLATE = "JNBHN 1";
+const OTP_TEMPLATE = "JNBHN1";
 
 function normalizeMobile(value) {
   const digits = String(value || "").replace(/\D/g, "");
@@ -34,16 +34,13 @@ export async function sendOtp(env, mobile, purpose) {
 
   const template = env.TWOFACTOR_OTP_TEMPLATE || OTP_TEMPLATE;
   const endpoint = `https://2factor.in/API/V1/${encodeURIComponent(env.TWOFACTOR_API_KEY)}/SMS/${encodeURIComponent(normalized)}/AUTOGEN/${encodeURIComponent(template)}`;
-  const response = await fetch(endpoint, { method: "GET", headers: { "accept": "application/json" } });
+  const response = await fetch(endpoint, { method: "GET", headers: { accept: "application/json" } });
   const data = await getJson(response);
   const status = String(data?.Status || "").toLowerCase();
-
   if (!response.ok || status !== "success") {
     throw new Error(data?.Details || data?.message || "2Factor could not send the OTP.");
   }
 
-  // 2Factor generates and verifies the OTP. JanBahon never stores the OTP itself.
-  // D1 keeps only a short-lived resend/attempt record for abuse protection.
   if (env.DB) {
     await env.DB.prepare(
       `INSERT INTO otp_codes (mobile, purpose, otp_hash, expires_at, attempts, last_sent_at)
@@ -75,10 +72,9 @@ export async function verifyOtp(env, mobile, purpose, code) {
   }
 
   const endpoint = `https://2factor.in/API/V1/${encodeURIComponent(env.TWOFACTOR_API_KEY)}/SMS/VERIFY3/${encodeURIComponent(normalized)}/${encodeURIComponent(cleanCode)}`;
-  const response = await fetch(endpoint, { method: "GET", headers: { "accept": "application/json" } });
+  const response = await fetch(endpoint, { method: "GET", headers: { accept: "application/json" } });
   const data = await getJson(response);
   const status = String(data?.Status || "").toLowerCase();
-
   if (!response.ok || status !== "success") {
     if (env.DB) {
       await env.DB.prepare("UPDATE otp_codes SET attempts = attempts + 1 WHERE mobile = ? AND purpose = ?")
@@ -91,7 +87,6 @@ export async function verifyOtp(env, mobile, purpose, code) {
     await env.DB.prepare("DELETE FROM otp_codes WHERE mobile = ? AND purpose = ?")
       .bind(normalized, purpose).run();
   }
-
   return { success: true, mobile: normalized };
 }
 
