@@ -2,6 +2,9 @@
   "name": "janbahon",
   "private": true,
   "type": "module",
+  "scripts": {
+    "build": "node -e \"console.log('JANBAHON static build: no compilation required')\""
+  },
   "dependencies": {
     "pdf-lib": "^1.17.1"
   }
