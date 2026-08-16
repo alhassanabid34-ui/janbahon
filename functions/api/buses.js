@@ -25,7 +25,7 @@ export async function onRequestGet({ request, env }) {
   const buses = [];
   for (const row of rows.results || []) {
     const blocks = await env.DB.prepare(
-      `SELECT COUNT(*) AS c FROM seat_blocks
+      `SELECT COUNT(DISTINCT seat_number) AS c FROM seat_blocks
        WHERE bus_id = ? AND start_date <= ? AND (end_date IS NULL OR end_date >= ?)`
     ).bind(row.bus_id, date, date).first();
     const blockedCount = Number(blocks?.c || 0);
