@@ -2,6 +2,9 @@
   "name": "janbahon",
   "private": true,
   "type": "module",
+  "scripts": {
+    "build": "npm install"
+  },
   "dependencies": {
     "pdf-lib": "^1.17.1"
   }
