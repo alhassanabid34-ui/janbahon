@@ -19,7 +19,7 @@ function b64url(bytes) {
 }
 
 function fromB64url(value) {
-  const padded = String(value || "").replaceAll("-", "+").replaceAll("_", "/") + "===");
+  const padded = String(value || "").replaceAll("-", "+").replaceAll("_", "/") + "===";
   const binary = atob(padded.slice(0, padded.length - (padded.length % 4)));
   return new Uint8Array([...binary].map(ch => ch.charCodeAt(0)));
 }
@@ -27,7 +27,8 @@ function fromB64url(value) {
 async function sessionMobile(request, secret) {
   if (!secret) return null;
   const cookie = request.headers.get("Cookie") || "";
-  const raw = cookie.split(";").map(v => v.trim()).find(v => v.startsWith("jb_owner_session="))?.slice(18);
+  const prefix = "jb_owner_session=";
+  const raw = cookie.split(";").map(v => v.trim()).find(v => v.startsWith(prefix))?.slice(prefix.length);
   if (!raw) return null;
   const [body, sig] = raw.split(".");
   if (!body || !sig || b64url(await hmac(body, secret)) !== sig) return null;
