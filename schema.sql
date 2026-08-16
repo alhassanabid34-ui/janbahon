@@ -70,6 +70,16 @@ CREATE TABLE IF NOT EXISTS seat_blocks (
   FOREIGN KEY (bus_id) REFERENCES buses(bus_id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS otp_codes (
+  mobile TEXT NOT NULL,
+  purpose TEXT NOT NULL,
+  otp_hash TEXT NOT NULL,
+  expires_at INTEGER NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  last_sent_at INTEGER NOT NULL,
+  PRIMARY KEY (mobile, purpose)
+);
+
 CREATE UNIQUE INDEX IF NOT EXISTS uq_active_bus_date_seat
   ON passengers(bus_id, journey_date, seat_number)
   WHERE booking_status = 'confirmed';
@@ -78,6 +88,7 @@ CREATE INDEX IF NOT EXISTS idx_bookings_date ON bookings(journey_date);
 CREATE INDEX IF NOT EXISTS idx_buses_owner ON buses(owner_id);
 CREATE INDEX IF NOT EXISTS idx_seat_blocks_bus_date ON seat_blocks(bus_id, start_date, end_date);
 CREATE INDEX IF NOT EXISTS idx_owners_mobile ON owners(mobile);
+CREATE INDEX IF NOT EXISTS idx_otp_expires ON otp_codes(expires_at);
 
 INSERT OR IGNORE INTO buses
 (bus_id, operator, name, bus_type, price, from_city, to_city, departure, arrival, duration, total_seats)
