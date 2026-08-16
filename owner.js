@@ -4,6 +4,7 @@ const registerView = $("registerView");
 const dashboardView = $("dashboardView");
 const authMessage = $("authMessage");
 let mobile = "";
+let operatorName = "";
 
 function escapeHTML(value){return String(value??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");}
 function today(){return new Date().toISOString().slice(0,10);}
@@ -73,14 +74,16 @@ $("busForm").addEventListener("submit",async event=>{
   event.preventDefault();
   const form=event.currentTarget;
   const photos=$("busPhotos").files;
-  if(photos.length>5){showMessage($("busMessage"),"Maximum 5 photos allowed.");return;}
+  if(photos.length>5){showMessage($("busMessage"),"Maximum 5 bus photos allowed.");return;}
   for(const file of photos){if(file.size>8*1024*1024){showMessage($("busMessage"),"Each photo must be 8 MB or smaller.");return;}}
   const video=form.elements.video.files[0];
   if(video&&video.size>25*1024*1024){showMessage($("busMessage"),"Video must be 25 MB or smaller.");return;}
   const data=new FormData(form);
+  data.set("operator",operatorName);
   try{
     await api("/api/owner-buses?action=create-bus",{method:"POST",body:data});
     form.reset();
+    $("busOperator").value=operatorName;
     showMessage($("busMessage"),"Bus added successfully.",true);
     loadBuses();
   }catch(error){showMessage($("busMessage"),error.message);}
@@ -93,8 +96,13 @@ $("logout").addEventListener("click",async()=>{
 
 function openDashboard(owner){
   loginView.classList.add("hidden");registerView.classList.add("hidden");dashboardView.classList.remove("hidden");
+  operatorName=String(owner?.business_name||"Your Operator").trim();
   $("ownerName").textContent=`Welcome, ${owner?.full_name||"Bus Owner"}`;
-  $("ownerBusiness").textContent=`${owner?.business_name||"Your business"} • KYC: ${owner?.status||"pending"}`;
+  $("ownerBusiness").textContent=`Operator: ${operatorName} • KYC: ${owner?.status||"pending"}`;
+  $("operatorDisplay").textContent=operatorName;
+  $("operatorChartName").textContent=operatorName;
+  $("operatorMobile").textContent=mobile ? `Owner mobile: ${mobile}` : "Owner account verified by mobile OTP";
+  $("busOperator").value=operatorName;
   loadBuses();
 }
 
@@ -103,9 +111,11 @@ async function loadBuses(){
   list.innerHTML='<div class="empty">Loading your buses…</div>';
   try{
     const data=await api("/api/owner-buses");
-    if(!data.buses?.length){list.innerHTML='<div class="empty"><strong>No buses added yet.</strong><br>Add your first bus above.</div>';return;}
+    const buses=data.buses||[];
+    $("operatorBusCount").textContent=String(buses.length);
+    if(!buses.length){list.innerHTML='<div class="empty"><strong>No buses added yet.</strong><br>Add your first bus above.</div>';return;}
     list.innerHTML="";
-    data.buses.forEach(bus=>list.appendChild(renderBus(bus)));
+    buses.forEach(bus=>list.appendChild(renderBus(bus)));
   }catch(error){list.innerHTML=`<div class="empty">${escapeHTML(error.message)}</div>`;}
 }
 
