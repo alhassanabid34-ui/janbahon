@@ -1,18 +1,8 @@
-export async function onRequestGet(context) {
-  const { env, request } = context;
-
+export async function onRequestGet({ request, env }) {
   try {
-    if (!env.DB) {
-      return json(
-        {
-          error: "D1 database binding DB is missing"
-        },
-        500
-      );
-    }
+    if (!env.DB) return json({ error: "D1 database binding DB is missing" }, 503);
 
     const url = new URL(request.url);
-
     const from = url.searchParams.get("from")?.trim() || "";
     const to = url.searchParams.get("to")?.trim() || "";
     const date = url.searchParams.get("date")?.trim() || "";
@@ -31,34 +21,25 @@ export async function onRequestGet(context) {
         b.duration,
         b.total_seats,
         b.owner_id,
-        o.name AS owner_name
+        COALESCE(o.full_name, '') AS owner_name
       FROM buses b
-      LEFT JOIN owners o
-        ON b.owner_id = o.owner_id
+      LEFT JOIN owners o ON b.owner_id = o.owner_id
       WHERE 1 = 1
     `;
-
     const params = [];
 
     if (from) {
-      sql += ` AND LOWER(b.from_city) = LOWER(?)`;
+      sql += " AND LOWER(b.from_city) = LOWER(?)";
       params.push(from);
     }
-
     if (to) {
-      sql += ` AND LOWER(b.to_city) = LOWER(?)`;
+      sql += " AND LOWER(b.to_city) = LOWER(?)";
       params.push(to);
     }
 
-    sql += `
-      ORDER BY b.departure ASC, b.operator ASC, b.name ASC
-    `;
+    sql += " ORDER BY b.departure ASC, b.operator ASC, b.name ASC";
 
-    const result = await env.DB
-      .prepare(sql)
-      .bind(...params)
-      .all();
-
+    const result = await env.DB.prepare(sql).bind(...params).all();
     return json({
       success: true,
       date: date || null,
@@ -67,17 +48,9 @@ export async function onRequestGet(context) {
       count: result.results?.length || 0,
       buses: result.results || []
     });
-
   } catch (error) {
     console.error("GET /api/buses error:", error);
-
-    return json(
-      {
-        success: false,
-        error: error.message || "Failed to load buses"
-      },
-      500
-    );
+    return json({ success: false, error: error?.message || "Failed to load buses" }, 500);
   }
 }
 
