@@ -7,6 +7,53 @@
   <meta name="description" content="JANBAHON — simple, fast and reliable bus booking across Assam and Northeast India.">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="bus-layout.css">
+  <style>
+    /* Passenger auth: CSS-only open/close so Login and Sign Up do not depend on JavaScript. */
+    .jb-auth-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(0,0,0,.65);
+    }
+    .jb-auth-modal:target { display: flex; }
+    .jb-auth-card {
+      width: min(460px, 100%);
+      max-height: calc(100vh - 40px);
+      overflow: auto;
+      position: relative;
+      padding: 30px;
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: 0 20px 70px rgba(0,0,0,.35);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    .jb-auth-card h2 { margin: 0 0 8px; color: #082b5c; font-size: 28px; }
+    .jb-auth-card p { margin: 0 0 18px; color: #667085; }
+    .jb-auth-card label { display:block; margin: 13px 0 6px; color:#082b5c; font-size:13px; font-weight:700; }
+    .jb-auth-card input {
+      width:100%; height:48px; padding:0 12px; box-sizing:border-box;
+      border:1px solid #ccd4dd; border-radius:9px; font-size:15px;
+    }
+    .jb-auth-card input:focus { outline:none; border-color:#f47b20; box-shadow:0 0 0 3px rgba(244,123,32,.12); }
+    .jb-auth-submit {
+      width:100%; height:48px; margin-top:18px; border:0; border-radius:9px;
+      background:#f47b20; color:#fff; font-weight:800; cursor:pointer;
+    }
+    .jb-auth-submit:hover { background:#d96512; }
+    .jb-auth-close {
+      position:absolute; right:12px; top:10px; width:36px; height:36px;
+      display:grid; place-items:center; border-radius:50%; background:#eee;
+      color:#222; text-decoration:none; font-size:22px; font-weight:400;
+    }
+    .jb-auth-links { display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:12px; }
+    .jb-auth-links a { color:#07579b; text-decoration:none; cursor:pointer; }
+    .jb-auth-links a:hover { text-decoration:underline; }
+    .jb-auth-note { margin-top:16px !important; padding:10px; border-radius:8px; background:#f6f8fb; font-size:12px; }
+  </style>
 </head>
 <body>
 <header class="site-header">
@@ -19,10 +66,11 @@
     <a href="#routes">Popular Routes</a>
     <a href="#bus-results">Available Buses</a>
     <a href="#help">Help</a>
-    <button type="button" id="jbPassengerLogin" class="passenger-login-btn" onclick="return window.jbOpenPassengerAuth ? window.jbOpenPassengerAuth('login') : false;">Login</button>
-    <button type="button" id="jbPassengerSignup" class="signup" onclick="return window.jbOpenPassengerAuth ? window.jbOpenPassengerAuth('signup') : false;">Sign Up</button>
+    <a href="#passenger-login" class="passenger-login-btn">Login</a>
+    <a href="#passenger-signup" class="signup">Sign Up</a>
   </nav>
 </header>
+
 <main>
   <section class="hero" id="booking">
     <div class="hero-inner">
@@ -39,6 +87,7 @@
       <p class="demo-note">Select your journey details and search for buses.</p>
     </div>
   </section>
+
   <section class="routes" id="routes">
     <div class="section-heading"><p class="eyebrow">ROUTES</p><h2>Popular Routes</h2><p>Frequently travelled connections across the region.</p></div>
     <div class="route-grid">
@@ -50,39 +99,86 @@
       <button class="route-card" data-from="Guwahati" data-to="Dhubri"><b>Guwahati</b><span>→</span><b>Dhubri</b></button>
     </div>
   </section>
+
   <section class="bus-results" id="bus-results">
     <div class="section-heading"><p class="eyebrow">AVAILABLE BUSES</p><h2>Choose Your Bus</h2><p id="results-summary">Search for buses to see available services.</p></div>
     <div id="bus-results-list" class="bus-results-list"><div class="empty-results"><h3>No search made yet</h3><p>Enter your journey details above and search for buses.</p></div></div>
   </section>
 </main>
-<footer id="help"><div><strong>JANBAHON</strong><span>Bus booking for Assam &amp; Northeast India.</span></div><a href="/owner.html" class="owner-footer-link">Bus Owner Login / Register</a></footer>
-<script src="live-bus-fixed.js?v=20260816-2"></script>
-<script src="passenger-auth-lite.js?v=20260816-9"></script>
-<script>
-(function () {
-  function openPassenger(mode) {
-    if (window.JanbahonPassengerAuth && typeof window.JanbahonPassengerAuth.open === 'function') {
-      window.JanbahonPassengerAuth.open(mode);
-      return false;
-    }
-    var old = document.getElementById('jb-auth-loader');
-    if (old) old.remove();
-    var s = document.createElement('script');
-    s.id = 'jb-auth-loader';
-    s.src = '/passenger-auth-lite.js?v=20260816-9&reload=1';
-    s.onload = function () {
-      if (window.JanbahonPassengerAuth && typeof window.JanbahonPassengerAuth.open === 'function') {
-        window.JanbahonPassengerAuth.open(mode);
-      } else {
-        alert('Passenger login could not be loaded. Please refresh the page.');
-      }
-    };
-    s.onerror = function () { alert('Passenger login could not be loaded.'); };
-    document.head.appendChild(s);
-    return false;
-  }
-  window.jbOpenPassengerAuth = openPassenger;
-})();
-</script>
+
+<!-- CSS-only passenger login. This opens even if every JavaScript file fails. -->
+<section id="passenger-login" class="jb-auth-modal" aria-label="Passenger Login">
+  <div class="jb-auth-card">
+    <a class="jb-auth-close" href="#booking" aria-label="Close">×</a>
+    <h2>Passenger Login</h2>
+    <p>Login using your mobile number and password.</p>
+    <form onsubmit="return false;">
+      <label for="jb-login-mobile">Mobile number</label>
+      <input id="jb-login-mobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
+      <label for="jb-login-password">Password</label>
+      <input id="jb-login-password" type="password" placeholder="Password">
+      <button class="jb-auth-submit" type="submit">Login</button>
+    </form>
+    <div class="jb-auth-links">
+      <a href="#passenger-otp">Login with SMS OTP</a>
+      <a href="#passenger-signup">Create account</a>
+      <a href="#passenger-reset">Forgot password?</a>
+    </div>
+    <p class="jb-auth-note">Login screen is now independent of the passenger-auth JavaScript. We can connect the real account API after confirming the button works.</p>
+  </div>
+</section>
+
+<section id="passenger-signup" class="jb-auth-modal" aria-label="Create Passenger Account">
+  <div class="jb-auth-card">
+    <a class="jb-auth-close" href="#booking" aria-label="Close">×</a>
+    <h2>Create Passenger Account</h2>
+    <p>Create your JANBAHON passenger account.</p>
+    <form onsubmit="return false;">
+      <label for="jb-signup-name">Full name</label>
+      <input id="jb-signup-name" maxlength="100" placeholder="Your full name">
+      <label for="jb-signup-mobile">Mobile number</label>
+      <input id="jb-signup-mobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
+      <label for="jb-signup-password">Password</label>
+      <input id="jb-signup-password" type="password" placeholder="At least 6 characters">
+      <button class="jb-auth-submit" type="submit">Create Account</button>
+    </form>
+    <div class="jb-auth-links"><a href="#passenger-login">Already registered? Login</a></div>
+  </div>
+</section>
+
+<section id="passenger-otp" class="jb-auth-modal" aria-label="SMS OTP Login">
+  <div class="jb-auth-card">
+    <a class="jb-auth-close" href="#booking" aria-label="Close">×</a>
+    <h2>Login with SMS OTP</h2>
+    <p>Enter your mobile number to continue with OTP login.</p>
+    <form onsubmit="return false;">
+      <label for="jb-otp-mobile">Mobile number</label>
+      <input id="jb-otp-mobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
+      <button class="jb-auth-submit" type="submit">Send OTP</button>
+    </form>
+    <div class="jb-auth-links"><a href="#passenger-login">Back to password login</a></div>
+  </div>
+</section>
+
+<section id="passenger-reset" class="jb-auth-modal" aria-label="Reset Password">
+  <div class="jb-auth-card">
+    <a class="jb-auth-close" href="#booking" aria-label="Close">×</a>
+    <h2>Forgot password?</h2>
+    <p>Enter your registered mobile number to reset your password.</p>
+    <form onsubmit="return false;">
+      <label for="jb-reset-mobile">Mobile number</label>
+      <input id="jb-reset-mobile" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number">
+      <button class="jb-auth-submit" type="submit">Send OTP</button>
+    </form>
+    <div class="jb-auth-links"><a href="#passenger-login">Back to login</a></div>
+  </div>
+</section>
+
+<footer id="help">
+  <div><strong>JANBAHON</strong><span>Bus booking for Assam &amp; Northeast India.</span></div>
+  <a href="/owner.html" class="owner-footer-link">Bus Owner Login / Register</a>
+</footer>
+
+<script src="live-bus-fixed.js?v=20260817-1"></script>
 </body>
 </html>
