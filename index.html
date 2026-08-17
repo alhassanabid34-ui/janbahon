@@ -19,8 +19,8 @@
     <a href="#routes">Popular Routes</a>
     <a href="#bus-results">Available Buses</a>
     <a href="#help">Help</a>
-    <button type="button" id="jbPassengerLogin" style="background:none;border:0;color:inherit;font:inherit;font-weight:600;cursor:pointer;padding:0">Login</button>
-    <button type="button" id="jbPassengerSignup" class="signup" style="border:0;font:inherit;font-weight:600;cursor:pointer">Sign Up</button>
+    <button type="button" id="jbPassengerLogin" class="passenger-login-btn" onclick="return window.jbOpenPassengerAuth ? window.jbOpenPassengerAuth('login') : false;">Login</button>
+    <button type="button" id="jbPassengerSignup" class="signup" onclick="return window.jbOpenPassengerAuth ? window.jbOpenPassengerAuth('signup') : false;">Sign Up</button>
   </nav>
 </header>
 <main>
@@ -57,32 +57,30 @@
 </main>
 <footer id="help"><div><strong>JANBAHON</strong><span>Bus booking for Assam &amp; Northeast India.</span></div><a href="/owner.html" class="owner-footer-link">Bus Owner Login / Register</a></footer>
 <script src="live-bus-fixed.js?v=20260816-2"></script>
-<script src="passenger-auth-lite.js?v=20260816-8"></script>
+<script src="passenger-auth-lite.js?v=20260816-9"></script>
 <script>
 (function () {
   function openPassenger(mode) {
     if (window.JanbahonPassengerAuth && typeof window.JanbahonPassengerAuth.open === 'function') {
       window.JanbahonPassengerAuth.open(mode);
-      return;
+      return false;
     }
+    var old = document.getElementById('jb-auth-loader');
+    if (old) old.remove();
     var s = document.createElement('script');
-    s.src = '/passenger-auth-lite.js?v=20260816-8&reload=1';
+    s.id = 'jb-auth-loader';
+    s.src = '/passenger-auth-lite.js?v=20260816-9&reload=1';
     s.onload = function () {
       if (window.JanbahonPassengerAuth && typeof window.JanbahonPassengerAuth.open === 'function') {
         window.JanbahonPassengerAuth.open(mode);
       } else {
-        alert('Passenger login could not be loaded. Please refresh and try again.');
+        alert('Passenger login could not be loaded. Please refresh the page.');
       }
     };
     s.onerror = function () { alert('Passenger login could not be loaded.'); };
     document.head.appendChild(s);
+    return false;
   }
-  document.addEventListener('DOMContentLoaded', function () {
-    var login = document.getElementById('jbPassengerLogin');
-    var signup = document.getElementById('jbPassengerSignup');
-    if (login) login.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); openPassenger('login'); });
-    if (signup) signup.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); openPassenger('signup'); });
-  });
   window.jbOpenPassengerAuth = openPassenger;
 })();
 </script>
